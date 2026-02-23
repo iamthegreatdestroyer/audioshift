@@ -1,0 +1,79 @@
+#!/sbin/sh
+# AudioShift Magisk Module — update-binary
+#
+# This is the Magisk module installer script executed by Magisk Manager
+# (or TWRP) during module installation.
+#
+# Magisk's module installation framework handles the actual file overlaying.
+# We only need to: verify ABI, copy files, and report status.
+#
+# Variables provided by Magisk:
+#   SKIPUNZIP  - set to 1 to skip automatic unzip of module zip
+#   MODPATH    - where the module files should be placed
+#   BOOTMODE   - 1 if installing via Magisk Manager in a booted system
+
+##########################################################################
+#  Magisk module API setup (Magisk provides these helpers via sourcing
+#  /data/adb/magisk/util_functions.sh at runtime)
+##########################################################################
+
+# The following shebang and boilerplate are required by Magisk's installer
+# framework. This file must be present at META-INF/com/google/android/update-binary
+
+SKIPUNZIP=1  # We handle extraction manually (only copy relevant ABI)
+
+# ─── UI helpers ───────────────────────────────────────────────────────────────
+ui_print() { echo "$1"; }
+abort()    { ui_print "ERROR: $1"; exit 1; }
+
+# ─── Detect ABI ───────────────────────────────────────────────────────────────
+ARCH=$(uname -m)
+case "$ARCH" in
+    aarch64)  ABI="arm64-v8a"  ;;
+    armv7l)   ABI="armeabi-v7a" ;;
+    *)        abort "Unsupported architecture: $ARCH (AudioShift requires aarch64)." ;;
+esac
+
+ui_print " ============================================"
+ui_print "  AudioShift 432Hz — Magisk Module Installer"
+ui_print "  Version: 1.0.0"
+ui_print "  Architecture: $ABI"
+ui_print " ============================================"
+
+# ─── Check Android version (require 9+) ──────────────────────────────────────
+SDK=$(getprop ro.build.version.sdk)
+if [ "$SDK" -lt 28 ]; then
+    abort "Android 9 (SDK 28) or higher required. Found SDK $SDK."
+fi
+ui_print "[+] Android SDK $SDK — compatible ✓"
+
+# ─── Extract module files ─────────────────────────────────────────────────────
+ui_print "[+] Extracting module files..."
+unzip -o "$ZIPFILE" \
+    'module.prop' \
+    'common/*' \
+    'system/*' \
+    -d "$MODPATH" \
+    >&2
+
+# ─── Verify the .so is present ───────────────────────────────────────────────
+SO="$MODPATH/system/lib64/soundfx/libaudioshift_effect.so"
+if [ ! -f "$SO" ]; then
+    abort "libaudioshift_effect.so not found in module zip. Was the module built for $ABI?"
+fi
+SO_SIZE=$(stat -c%s "$SO" 2>/dev/null || echo "0")
+ui_print "[+] libaudioshift_effect.so ($SO_SIZE bytes) ✓"
+
+# ─── Set permissions ──────────────────────────────────────────────────────────
+set_perm_recursive "$MODPATH"             root root  0755 0644
+set_perm "$MODPATH/common/service.sh"     root root  0755
+set_perm "$MODPATH/common/post-fs-data.sh" root root 0755
+chmod 644 "$SO"
+
+# ─── Done ─────────────────────────────────────────────────────────────────────
+ui_print " "
+ui_print "[+] AudioShift installed successfully!"
+ui_print "    Reboot to activate 440→432 Hz conversion."
+ui_print " "
+ui_print "    To verify: adb shell getprop persist.audioshift.status"
+ui_print " "

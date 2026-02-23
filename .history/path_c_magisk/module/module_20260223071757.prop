@@ -1,0 +1,7 @@
+id=audioshift
+name=AudioShift 432Hz
+version=v1.0.0
+versionCode=100
+author=AudioShift Project
+description=Shifts system audio from 440 Hz to 432 Hz via Android Audio Effects API. Applies transparently to all audio output without modifying apps. Requires AudioFlinger 9+ (Android 9+).
+minMagisk=20000

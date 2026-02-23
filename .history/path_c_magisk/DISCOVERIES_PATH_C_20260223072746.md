@@ -31,7 +31,6 @@ for the Galaxy S25+ is therefore `/vendor/etc/`.
 ### Mechanism
 
 The Magisk overlay bind-mounts:
-
 ```
 /data/adb/modules/audioshift/system/vendor/etc/audio_effects_audioshift.xml
   → (visible as)
@@ -96,22 +95,20 @@ Device boot
 
 The Android Effects API mandates exactly **five** exported C-linkage symbols. Missing any one of
 them causes AudioFlinger to log:
-
 ```
 E AudioEffectHal: Failed to query effect at index 0: -38 (ENOSYS)
 ```
-
 and skip our library entirely.
 
 ### Required Exports
 
-| Symbol                     | Signature                                                                        | Purpose                   |
-| -------------------------- | -------------------------------------------------------------------------------- | ------------------------- |
-| `EffectCreate`             | `int32_t(const effect_uuid_t*, int32_t session, int32_t ioId, effect_handle_t*)` | Allocate context          |
-| `EffectRelease`            | `int32_t(effect_handle_t)`                                                       | Free context              |
-| `EffectGetDescriptor`      | `int32_t(const effect_uuid_t*, effect_descriptor_t*)`                            | Return static descriptor  |
-| `EffectQueryNumberEffects` | `uint32_t(uint32_t*)`                                                            | Count effects in this lib |
-| `EffectQueryEffect`        | `int32_t(uint32_t, effect_descriptor_t*)`                                        | Enumerate effect by index |
+| Symbol | Signature | Purpose |
+|--------|-----------|---------|
+| `EffectCreate` | `int32_t(const effect_uuid_t*, int32_t session, int32_t ioId, effect_handle_t*)` | Allocate context |
+| `EffectRelease` | `int32_t(effect_handle_t)` | Free context |
+| `EffectGetDescriptor` | `int32_t(const effect_uuid_t*, effect_descriptor_t*)` | Return static descriptor |
+| `EffectQueryNumberEffects` | `uint32_t(uint32_t*)` | Count effects in this lib |
+| `EffectQueryEffect` | `int32_t(uint32_t, effect_descriptor_t*)` | Enumerate effect by index |
 
 ### Symbol Isolation Technique
 
@@ -127,11 +124,9 @@ set_target_properties(audioshift_effect PROPERTIES
 Only the five mandatory symbols carry `__attribute__((visibility("default")))`.
 
 Verification command:
-
 ```bash
 aarch64-linux-android-nm -D libaudioshift_effect.so | grep " T "
 ```
-
 Must output exactly these five (plus `std::` exception functions and `__cxa_*` rethrow hooks).
 
 ---
@@ -145,7 +140,6 @@ from standard Android `AudioPolicy`). This layer can **suppress** third-party po
 on certain stream types.
 
 **Symptoms observed:**
-
 - Effect registered in XML correctly ✓
 - `.so` symbols all export correctly ✓
 - `dumpsys media.audio_flinger` shows our UUID in the descriptor table ✓
@@ -170,26 +164,22 @@ PATH-B (ROM/AOSP build) remains a viable parallel track for users who need guara
 
 Magisk requires an unlocked bootloader. On Samsung Galaxy S25+, bootloader unlock permanently blows
 the Knox eFuse:
-
 ```
 KNOX WARRANTY BIT: 0x0  → (after unlock) → 0x1  (irreversible)
 ```
 
 **Consequences:**
-
 - Samsung Pay disabled permanently
 - Knox Vault (secure enclave) deactivated
 - Some enterprise MDM policies refuse the device
 - Samsung warranty may be affected in some regions
 
 **AudioShift implication:** PATH-C (Magisk) is appropriate for:
-
 - Development and testing devices
 - Personal devices where Knox features are not required
 - Devices already unlocked for other purposes (custom recovery, etc.)
 
 PATH-B (custom ROM) is appropriate for:
-
 - Users willing to run AOSP-based ROM entirely
 - Developers needing a clean build environment
 
@@ -200,31 +190,27 @@ PATH-B (custom ROM) is appropriate for:
 ### What We Found
 
 The SoundTouch WSOLA algorithm introduces a deterministic output delay of:
-
 ```
 latency_samples ≈ (sequence_ms / 1000) × sample_rate
                 = (20ms) × 48000 ÷ 1000
                 = 960 samples
 ```
-
 At 48 kHz stereo with `p 1024` hardware period:
-
 ```
 latency_ms ≈ (960 / 48000) × 1000 = 20 ms
 ```
 
 This exactly meets (but does not exceed) our 20 ms latency target. Tuning knobs:
 
-| SoundTouch Setting      | Default | Effect on Latency                          |
-| ----------------------- | ------- | ------------------------------------------ |
-| `SETTING_SEQUENCE_MS`   | 40 ms   | Decrease → lower latency, worse quality    |
-| `SETTING_SEEKWINDOW_MS` | 15 ms   | Decrease → lower latency                   |
-| `SETTING_OVERLAP_MS`    | 8 ms    | Minimal impact                             |
-| `SETTING_USE_QUICKSEEK` | 0       | Enable (=1) → lower CPU, similar quality   |
-| `SETTING_USE_AA_FILTER` | 1       | Disable (=0) → lower latency, minimal loss |
+| SoundTouch Setting | Default | Effect on Latency |
+|--------------------|---------|-------------------|
+| `SETTING_SEQUENCE_MS` | 40 ms | Decrease → lower latency, worse quality |
+| `SETTING_SEEKWINDOW_MS` | 15 ms | Decrease → lower latency |
+| `SETTING_OVERLAP_MS` | 8 ms | Minimal impact |
+| `SETTING_USE_QUICKSEEK` | 0 | Enable (=1) → lower CPU, similar quality |
+| `SETTING_USE_AA_FILTER` | 1 | Disable (=0) → lower latency, minimal loss |
 
 For real-time performance tuning, we set:
-
 ```cpp
 soundtouch->setSetting(SETTING_USE_QUICKSEEK, 1);
 soundtouch->setSetting(SETTING_USE_AA_FILTER, 1);
@@ -240,13 +226,11 @@ The `effect_buffer_t` union in the Android Effects API may carry data as either 
 or `float` depending on how AudioFlinger has negotiated the format with the hardware HAL.
 
 On Snapdragon 8 Elite + Qualcomm audio HAL (QSSI_2401):
-
 - Hardware operates natively in **32-bit float** internally
 - AudioFlinger passes buffers to effects as **PCM16 (`int16_t`)** unless the effect descriptor
   declares `EFFECT_FLAG_DATA_FORMAT_FLOAT` support
 
 **Our approach:** Accept PCM16, convert to float for SoundTouch, convert back:
-
 ```cpp
 pcm16ToFloat : int16_t sample → float ∈ [-1.0, +1.0]
 floatToPcm16 : float → clamp([-1.0, 1.0]) → int16_t with saturation
@@ -268,7 +252,6 @@ Priority  Path                                    Source
 ```
 
 Magisk overlay maps:
-
 ```
 module/system/lib64/soundfx/libaudioshift_effect.so
   → bind-mounted at /system/lib64/soundfx/
@@ -283,10 +266,10 @@ module/system/vendor/etc/audio_effects_audioshift.xml
 
 ## Key Findings Index
 
-_(Links will be added as discoveries are made)_
+*(Links will be added as discoveries are made)*
 
 ## Cross-Path Synergies
 
 Insights from PATH-C that could benefit PATH-B:
 
-_(To be filled during development)_
+*(To be filled during development)*

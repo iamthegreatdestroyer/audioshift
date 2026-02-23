@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AudioShift 432Hz — Audio Effects Registration
+
+  This XML registers libaudioshift_effect.so with Android's Audio Effects
+  Framework. AudioFlinger reads all XML files in /vendor/etc/ matching
+  audio_effects*.xml and makes the declared effects available to all audio
+  sessions.
+
+  UUIDs must match exactly with audioshift_hook.h:
+    Type UUID : 7b491460-8d4d-11e0-bd6a-0002a5d5c51b  (custom pitch shift type)
+    Impl UUID : f1a2b3c4-5678-90ab-cdef-0123456789ab  (AudioShift implementation)
+
+  Effect type is "insert" — applied to the final mix before hardware output,
+  ensuring ALL audio sources (music, calls, games, notifications) are shifted.
+
+  Reference: path_c_magisk/DISCOVERIES_PATH_C.md §2 "Effects XML Schema"
+-->
+<audio_effects_conf version="2.0"
+    xmlns="http://schemas.android.com/audio/audio_effects_conf/v2_0">
+
+    <!--
+        libraries: Maps a short name to the .so file.
+        The loader searches /system/lib64/soundfx/ and /vendor/lib64/soundfx/
+    -->
+    <libraries>
+        <library name="audioshift" path="libaudioshift_effect.so"/>
+    </libraries>
+
+    <!--
+        effects: Declares each effect by its type UUID and implementation UUID.
+        The type UUID identifies the category (e.g., pitch shift).
+        The implementation UUID identifies this specific implementation.
+    -->
+    <effects>
+        <effect name="audioshift_432hz" library="audioshift" uuid="f1a2b3c4-5678-90ab-cdef-0123456789ab"/>
+    </effects>
+
+    <!--
+        postprocess: Applied to the global audio mix after all streams are
+        mixed, before the HAL writes to hardware. This ensures every audio
+        output — regardless of which app plays it — goes through the 432 Hz shift.
+
+        Note: "session" of "0" means the global output mix session.
+    -->
+    <postprocess>
+        <stream type="music">
+            <apply effect="audioshift_432hz"/>
+        </stream>
+    </postprocess>
+
+</audio_effects_conf>

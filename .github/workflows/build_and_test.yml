@@ -1,0 +1,295 @@
+name: AudioShift — Build, Test & Lint
+
+# ──────────────────────────────────────────────────────────────────────────
+# Triggers
+# ──────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main, develop, "feature/**", "release/**"]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run_ndk_build:
+        description: "Run Android NDK cross-compilation (slow)"
+        required: false
+        default: "true"
+
+# Cancel in-flight runs for the same branch on new push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shared environment
+# ──────────────────────────────────────────────────────────────────────────
+env:
+  NDK_VERSION: "26.3.11579264" # NDK r26d — matches Samsung Galaxy S25+
+  ANDROID_API_LEVEL: "35" # Android 15
+  CMAKE_BUILD_TYPE: "Release"
+  PYTHON_VERSION: "3.11"
+
+# ══════════════════════════════════════════════════════════════════════════
+# JOB 1: Host C++ Unit Tests (GoogleTest)
+# ══════════════════════════════════════════════════════════════════════════
+jobs:
+  host_unit_tests:
+    name: "Host Unit Tests (C++ / GoogleTest)"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build \
+            g++-12 \
+            libgtest-dev \
+            clang-format-15 \
+            python3-pip
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pytest
+
+      - name: Configure host DSP library
+        run: |
+          cmake -B shared/dsp/build_ci \
+            -S shared/dsp \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DBUILD_TESTING=ON
+
+      - name: Build host DSP library
+        run: cmake --build shared/dsp/build_ci --parallel $(nproc)
+
+      - name: Configure host unit tests
+        run: |
+          cmake -B tests/unit/build_ci \
+            -S tests/unit \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DREPO_ROOT=${{ github.workspace }}
+
+      - name: Build host unit tests
+        run: cmake --build tests/unit/build_ci --parallel $(nproc)
+
+      - name: Run C++ unit tests (CTest)
+        working-directory: tests/unit/build_ci
+        run: |
+          ctest --output-on-failure \
+                --timeout 60 \
+                --test-dir . \
+                -j $(nproc)
+
+      - name: Upload CTest output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-output-${{ github.run_id }}
+          path: tests/unit/build_ci/Testing/
+
+      - name: Run DSP library self-tests
+        working-directory: shared/dsp/build_ci
+        run: ctest --output-on-failure --timeout 60
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 2: Python / FFT Tests (pytest)
+  # ══════════════════════════════════════════════════════════════════════════
+  python_tests:
+    name: "Python FFT Tests (pytest)"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pytest pytest-cov
+
+      - name: Run FFT analysis tests
+        run: |
+          pytest tests/unit/test_fft_analysis.py \
+            -v \
+            --tb=short \
+            --durations=10 \
+            --cov=. \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage-${{ github.run_id }}
+          path: coverage.xml
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 3: Clang-Format Lint
+  # ══════════════════════════════════════════════════════════════════════════
+  clang_format:
+    name: "C++ Format Check (clang-format)"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends clang-format-15
+
+      - name: Check C++ formatting
+        run: |
+          # Collect all C/C++ source files
+          FILES=$(find . \
+            -not -path '*/third_party/*' \
+            -not -path '*/build*' \
+            -not -path '*/.git/*' \
+            \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.cc' \) \
+            | sort)
+
+          echo "Files to check:"
+          echo "$FILES"
+
+          ERRORS=0
+          for f in $FILES; do
+            if ! clang-format-15 --dry-run --Werror --style=Google "$f" 2>/dev/null; then
+              echo "FAIL: $f"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "Found $ERRORS file(s) with formatting issues."
+            echo "Run: clang-format-15 --style=Google -i <file>"
+            exit 1
+          fi
+          echo "All files pass clang-format."
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 4: Android NDK Cross-Compilation (ARM64)
+  # ══════════════════════════════════════════════════════════════════════════
+  ndk_cross_compile:
+    name: "Android NDK Build (arm64-v8a)"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    # Skip this slower job for draft PRs and unless explicitly requested
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      github.event.inputs.run_ndk_build == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK (for Android SDK manager)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Android SDK + NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install specific NDK version
+        run: |
+          sdkmanager --install "ndk;${{ env.NDK_VERSION }}"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}" >> $GITHUB_ENV
+
+      - name: Configure NDK AudioFlinger hook build (PATH-C)
+        run: |
+          cmake -B path_c_magisk/native/build_ndk \
+            -S path_c_magisk/native \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-${{ env.ANDROID_API_LEVEL }} \
+            -DANDROID_STL=c++_shared
+
+      - name: Build hook library (ARM64)
+        run: |
+          cmake --build path_c_magisk/native/build_ndk --parallel $(nproc)
+
+      - name: Verify built library exists and is ARM64 ELF
+        run: |
+          LIB=$(find path_c_magisk/native/build_ndk \
+            -name 'libaudioshift_hook.so' -type f | head -1)
+          test -n "$LIB" || { echo "Library not found!"; exit 1; }
+          file "$LIB"
+          file "$LIB" | grep -q "ARM aarch64" || \
+            { echo "Library is not ARM64!"; exit 1; }
+          echo "OK: $LIB is ARM64 ELF"
+          ls -lh "$LIB"
+
+      - name: Configure NDK DSP library build
+        run: |
+          cmake -B shared/dsp/build_ndk \
+            -S shared/dsp \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_TOOLCHAIN_FILE=$NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-${{ env.ANDROID_API_LEVEL }} \
+            -DANDROID_STL=c++_shared
+
+      - name: Build DSP library (ARM64)
+        run: cmake --build shared/dsp/build_ndk --parallel $(nproc)
+
+      - name: Upload ARM64 libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-libs-${{ github.run_id }}
+          path: |
+            path_c_magisk/native/build_ndk/**/*.so
+            shared/dsp/build_ndk/**/*.so
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 5: Build Summary
+  # ══════════════════════════════════════════════════════════════════════════
+  build_summary:
+    name: "Build Summary"
+    runs-on: ubuntu-22.04
+    needs: [host_unit_tests, python_tests, clang_format]
+    if: always()
+
+    steps:
+      - name: Summarise results
+        run: |
+          echo "# AudioShift CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Host Unit Tests  | ${{ needs.host_unit_tests.result  }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python FFT Tests | ${{ needs.python_tests.result     }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Clang-Format     | ${{ needs.clang_format.result     }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any required job failed
+        if: |
+          needs.host_unit_tests.result == 'failure' ||
+          needs.python_tests.result    == 'failure' ||
+          needs.clang_format.result    == 'failure'
+        run: exit 1

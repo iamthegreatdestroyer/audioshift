@@ -172,7 +172,7 @@ jobs:
 
           ERRORS=0
           for f in $FILES; do
-            if ! clang-format-15 --dry-run --Werror --style=Google "$f" 2>/dev/null; then
+            if ! clang-format-15 --dry-run --Werror --style=file "$f" 2>/dev/null; then
               echo "FAIL: $f"
               ERRORS=$((ERRORS + 1))
             fi
@@ -181,7 +181,7 @@ jobs:
           if [ $ERRORS -gt 0 ]; then
             echo ""
             echo "Found $ERRORS file(s) with formatting issues."
-            echo "Run: clang-format-15 --style=Google -i <file>"
+            echo "Run: clang-format-15 --style=file -i <file>  (uses .clang-format in repo root)"
             exit 1
           fi
           echo "All files pass clang-format."

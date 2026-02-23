@@ -43,3 +43,12 @@ private_keys/
 *.zip
 *.img
 *.bin
+
+# Windows VS Code history
+.history/
+
+# Host build artifacts
+build_host/
+shared/dsp/build_host/
+shared/dsp/build_ci/
+tests/unit/build_ci/

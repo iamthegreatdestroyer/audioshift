@@ -1,0 +1,45 @@
+# AOSP/Android build artifacts
+/out/
+*.apk
+*.dex
+*.class
+*.jar
+build/
+
+# Compiled DSP libraries
+*.so
+*.a
+*.o
+*.os
+*.pyc
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build system
+*.gradle
+.gradle/
+
+# Environment
+.env
+.env.local
+/vendor/
+/system/
+
+# Test artifacts
+/test_results/
+*.log
+
+# Device-specific (secrets)
+device_keys/
+private_keys/
+
+# Large binary files
+*.zip
+*.img
+*.bin

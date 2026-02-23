@@ -106,7 +106,7 @@ endif()
 # Strip all non-exported symbols in release
 set_target_properties(audioshift_effect PROPERTIES
     LINK_FLAGS_RELEASE "-Wl,--strip-all"
-    OUTPUT_NAME "audioshift_effect"   # → libaudioshift_effect.so
+    OUTPUT_NAME "audioshift_hook"      # → libaudioshift_hook.so
 )
 
 # ─── Install into Magisk module directory ────────────────────────────────────

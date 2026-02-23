@@ -28,10 +28,10 @@ public:
         soundTouch.setPitchSemiTones(PITCH_SEMITONES);
 
         // Tuning for real-time: lower latency, reasonable quality
-        soundTouch.setSetting(soundtouch::SoundTouch::SETTING_USE_AA_FILTER, 1);
-        soundTouch.setSetting(soundtouch::SoundTouch::SETTING_SEQUENCE_MS, 40);
-        soundTouch.setSetting(soundtouch::SoundTouch::SETTING_SEEKWINDOW_MS, 15);
-        soundTouch.setSetting(soundtouch::SoundTouch::SETTING_OVERLAP_MS, 8);
+        soundTouch.setSetting(SETTING_USE_AA_FILTER, 1);
+        soundTouch.setSetting(SETTING_SEQUENCE_MS, 40);
+        soundTouch.setSetting(SETTING_SEEKWINDOW_MS, 15);
+        soundTouch.setSetting(SETTING_OVERLAP_MS, 8);
 
         lastProcessTime = std::chrono::steady_clock::now();
     }

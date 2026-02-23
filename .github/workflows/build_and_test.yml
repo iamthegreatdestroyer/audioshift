@@ -25,7 +25,7 @@ concurrency:
 # ──────────────────────────────────────────────────────────────────────────
 env:
   NDK_VERSION: "26.3.11579264" # NDK r26d — matches Samsung Galaxy S25+
-  ANDROID_API_LEVEL: "35" # Android 15
+  ANDROID_API_LEVEL: "34" # Android 14 (NDK r26d max)
   CMAKE_BUILD_TYPE: "Release"
   PYTHON_VERSION: "3.11"
 
@@ -118,6 +118,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install Python dependencies
         run: |

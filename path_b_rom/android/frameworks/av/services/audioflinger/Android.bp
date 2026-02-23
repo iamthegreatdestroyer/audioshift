@@ -1,0 +1,36 @@
+// AudioShift 432Hz Effect — Soong build descriptor
+// Applied as a patch to AOSP frameworks/av/services/audioflinger/
+
+cc_library_shared {
+    name: "libaudioshift432",
+    vendor: true,
+    srcs: [
+        "AudioShift432Effect.cpp",
+    ],
+    header_libs: [
+        "libhardware_headers",
+        "libaudio_system_headers",
+    ],
+    shared_libs: [
+        "liblog",
+        "libutils",
+        "libcutils",
+    ],
+    include_dirs: [
+        "vendor/audioshift/shared/dsp/include",
+    ],
+    whole_static_libs: [
+        "libsoundtouch_internal",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-O2",
+        "-ffast-math",
+    ],
+    arch: {
+        arm64: {
+            instruction_set: "arm64",
+        },
+    },
+}

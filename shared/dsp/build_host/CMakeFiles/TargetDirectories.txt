@@ -1,0 +1,5 @@
+S:/audioshift/shared/dsp/build_host/CMakeFiles/soundtouch_internal.dir
+S:/audioshift/shared/dsp/build_host/CMakeFiles/audioshift_dsp.dir
+S:/audioshift/shared/dsp/build_host/CMakeFiles/ALL_BUILD.dir
+S:/audioshift/shared/dsp/build_host/CMakeFiles/ZERO_CHECK.dir
+S:/audioshift/shared/dsp/build_host/tests/CMakeFiles/test_audio_432hz.dir

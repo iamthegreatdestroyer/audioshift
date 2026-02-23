@@ -1,0 +1,10 @@
+^S:\AUDIOSHIFT\SHARED\DSP\TESTS\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SS:/audioshift/shared/dsp -BS:/audioshift/shared/dsp/build_host --check-stamp-file S:/audioshift/shared/dsp/build_host/tests/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

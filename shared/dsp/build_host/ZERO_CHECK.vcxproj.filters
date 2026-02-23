@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="S:\audioshift\shared\dsp\build_host\CMakeFiles\4688295b07919aba0223e348381f11c7\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{CADD888D-AD99-395C-880C-49BF4BF6A5D2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

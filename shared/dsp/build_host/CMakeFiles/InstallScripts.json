@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"S:/audioshift/shared/dsp/build_host/cmake_install.cmake",
+		"S:/audioshift/shared/dsp/build_host/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

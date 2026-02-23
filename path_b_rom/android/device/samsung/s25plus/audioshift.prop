@@ -1,0 +1,23 @@
+# AudioShift System Properties
+# Applied to /system/build.prop in ROM
+
+# Enable AudioShift 432Hz pitch shift
+audioshift.enabled=1
+
+# Pitch shift in semitones (negative = down)
+audioshift.pitch_semitones=-0.5296
+
+# Target sample rate (Hz)
+audioshift.sample_rate=48000
+
+# WSOLA sequence length in ms (latency tradeoff)
+audioshift.wsola.sequence_ms=40
+audioshift.wsola.seekwindow_ms=15
+audioshift.wsola.overlap_ms=8
+
+# Debug logging (0=off, 1=on)
+audioshift.debug=0
+
+# Version tracking
+audioshift.version=2.0.0
+audioshift.path=B

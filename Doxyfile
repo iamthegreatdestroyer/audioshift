@@ -1,0 +1,114 @@
+# AudioShift — Doxygen Configuration
+# Generated for Track 4: Documentation & Community
+#
+# Run: doxygen Doxyfile
+# Output: docs/generated/html/
+
+#---------------------------------------------------------------------------
+# Project metadata
+#---------------------------------------------------------------------------
+
+PROJECT_NAME           = "AudioShift"
+PROJECT_BRIEF          = "System-wide 432 Hz real-time pitch-shifting for Android — Magisk module & Custom ROM"
+PROJECT_VERSION        = "1.0"
+PROJECT_LOGO           =
+
+#---------------------------------------------------------------------------
+# Input / output
+#---------------------------------------------------------------------------
+
+INPUT                  = path_c_magisk/native \
+                         shared/dsp/include \
+                         shared/audio_testing/src
+
+OUTPUT_DIRECTORY       = docs/generated
+
+RECURSIVE              = YES
+
+# Patterns to include
+FILE_PATTERNS          = *.cpp \
+                         *.h \
+                         *.c \
+                         *.cc \
+                         *.hpp \
+                         *.md
+
+# Patterns to exclude — build artefacts and third-party code
+EXCLUDE_PATTERNS       = */build/* \
+                         */third_party/* \
+                         */build_host/* \
+                         */.git/* \
+                         */tests/*
+
+# Use docs/index.md as the Doxygen main page
+USE_MDFILE_AS_MAINPAGE = docs/index.md
+
+#---------------------------------------------------------------------------
+# Extraction settings
+#---------------------------------------------------------------------------
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_ANON_NSPACES   = NO
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+#---------------------------------------------------------------------------
+# HTML output (only HTML; no LaTeX)
+#---------------------------------------------------------------------------
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_COLORSTYLE        = AUTO_LIGHT
+HTML_TIMESTAMP         = YES
+GENERATE_TREEVIEW      = YES
+TOC_INCLUDE_HEADINGS   = 4
+
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = NO
+
+#---------------------------------------------------------------------------
+# Source browsing
+#---------------------------------------------------------------------------
+
+SOURCE_BROWSER         = NO
+INLINE_SOURCES         = NO
+
+#---------------------------------------------------------------------------
+# Diagrams (graphviz not required)
+#---------------------------------------------------------------------------
+
+HAVE_DOT               = NO
+
+#---------------------------------------------------------------------------
+# Pre-processor
+#---------------------------------------------------------------------------
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+
+#---------------------------------------------------------------------------
+# Warnings and progress
+#---------------------------------------------------------------------------
+
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+
+#---------------------------------------------------------------------------
+# Sort options
+#---------------------------------------------------------------------------
+
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = NO
+
+#---------------------------------------------------------------------------
+# Markdown support
+#---------------------------------------------------------------------------
+
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES

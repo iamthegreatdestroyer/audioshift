@@ -1,0 +1,116 @@
+##
+# AudioShift — MkDocs configuration
+# Track 4: GitHub Pages documentation site
+#
+# Local preview: pip install mkdocs-material && mkdocs serve
+# Build:         mkdocs build --site-dir site
+# CI deploys automatically via .github/workflows/docs.yml
+##
+
+site_name: AudioShift
+site_description: >-
+  System-wide 432 Hz pitch-shifting for Android —
+  Magisk module & Custom ROM implementation guide.
+site_url: https://iamthegreatdestroyer.github.io/audioshift
+
+repo_url: https://github.com/iamthegreatdestroyer/audioshift
+repo_name: iamthegreatdestroyer/audioshift
+
+copyright: "Copyright © 2024 AudioShift contributors — MIT License"
+
+#---------------------------------------------------------------------------
+# Theme
+#---------------------------------------------------------------------------
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    logo: material/music-note
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.instant
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+#---------------------------------------------------------------------------
+# Navigation
+#---------------------------------------------------------------------------
+
+nav:
+  - Home: index.md
+  - Getting Started: GETTING_STARTED.md
+  - Architecture: ARCHITECTURE.md
+  - API Reference: API_REFERENCE.md
+  - Device Support: DEVICE_SUPPORT.md
+  - Troubleshooting: TROUBLESHOOTING.md
+  - FAQ: FAQ.md
+  - Android Internals: ANDROID_INTERNALS.md
+  - Development Guide: DEVELOPMENT_GUIDE.md
+
+#---------------------------------------------------------------------------
+# Docs directory
+#---------------------------------------------------------------------------
+
+docs_dir: docs
+
+#---------------------------------------------------------------------------
+# Markdown extensions
+#---------------------------------------------------------------------------
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+
+#---------------------------------------------------------------------------
+# Plugins
+#---------------------------------------------------------------------------
+
+plugins:
+  - search:
+      lang: en
+
+#---------------------------------------------------------------------------
+# Extra
+#---------------------------------------------------------------------------
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/iamthegreatdestroyer/audioshift
+    - icon: fontawesome/brands/android
+      link: https://forum.xda-developers.com

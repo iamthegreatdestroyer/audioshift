@@ -345,7 +345,7 @@ cents = 1200 * math.log2(ratio)            # -31.637...
 # Confirm: 440 Hz shifted by exact cents
 freq_shifted = 440 * (2 ** (cents / 1200)) # 432.000 Hz ✓
 
-# AudioShift design value  
+# AudioShift design value
 audioshift_hz = 440 * (2 ** (-52 / 1200))  # 426.724 Hz
 print(f"Pure 432 Hz cents: {cents:.3f}")
 print(f"Shifted frequency: {freq_shifted:.3f} Hz")

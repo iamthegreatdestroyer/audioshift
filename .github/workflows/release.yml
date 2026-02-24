@@ -1,0 +1,71 @@
+##
+# AudioShift — Release Workflow
+# Track 4 §4.4
+#
+# Triggers on: push of any tag matching v* (e.g. v1.0.0, v1.1.0-rc1)
+#
+# Jobs:
+#   create_release → generate release notes via git-cliff, create GitHub Release
+#
+# Dependencies:
+#   .cliff.toml          — git-cliff configuration (Track 4 §4.3)
+#   audioshift432-*.zip  — build artefacts (produced by build_and_test.yml)
+##
+
+name: "AudioShift — Release"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write        # required to create GitHub Releases
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  create_release:
+    name: "Create GitHub Release"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0         # git-cliff reads entire tag + commit history
+
+      # ── Generate release notes from conventional commits ──────────────────
+      - name: Generate release notes (git-cliff)
+        uses: orhun/git-cliff-action@v3
+        id: cliff
+        with:
+          config: .cliff.toml
+          args: --unreleased --tag ${{ github.ref_name }}
+        env:
+          OUTPUT: RELEASE_NOTES.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      # ── Show generated notes in CI log ────────────────────────────────────
+      - name: Print release notes
+        run: |
+          echo "──── Release Notes ────"
+          cat RELEASE_NOTES.md
+          echo "───────────────────────"
+
+      # ── Create GitHub Release ─────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          files: |
+            audioshift432-*.zip
+          draft: false
+          prerelease: >-
+            ${{
+              contains(github.ref_name, 'rc')    ||
+              contains(github.ref_name, 'alpha') ||
+              contains(github.ref_name, 'beta')
+            }}
+          generate_release_notes: false   # we use git-cliff; suppress GitHub's auto-notes
+          fail_on_unmatched_files: false  # graceful if zip not yet staged

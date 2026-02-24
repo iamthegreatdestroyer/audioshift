@@ -310,7 +310,7 @@ jobs:
       github.ref == 'refs/heads/main' ||
       github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
-    continue-on-error: true   # self-hosted runner may not always be present
+    continue-on-error: true # self-hosted runner may not always be present
 
     steps:
       - uses: actions/checkout@v4

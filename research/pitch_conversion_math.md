@@ -1,7 +1,7 @@
 # 432 Hz Pitch Conversion Mathematics
 
-*AudioShift Project — Reference Document (Track 3.4)*
-*For the auto-generated version with computed values, run `bash scripts/collect_research.sh`*
+_AudioShift Project — Reference Document (Track 3.4)_
+_For the auto-generated version with computed values, run `bash scripts/collect_research.sh`_
 
 ---
 
@@ -76,10 +76,10 @@ CONFIG_AUDIOSHIFT_DSP_DEFAULT_PITCH_CENTS := -52
 This is `-52 cents`, **not** the mathematically exact `-31.766 cents`. This is an
 intentional design decision; the table below compares both values:
 
-| Parameter | Cents | Resulting frequency (A₄ reference) |
-|-----------|-------|-------------------------------------|
-| Pure 432/440 ratio | **−31.766 cents** | **432.000 Hz** |
-| AudioShift default | **−52 cents** | **426.724 Hz** |
+| Parameter          | Cents             | Resulting frequency (A₄ reference) |
+| ------------------ | ----------------- | ---------------------------------- |
+| Pure 432/440 ratio | **−31.766 cents** | **432.000 Hz**                     |
+| AudioShift default | **−52 cents**     | **426.724 Hz**                     |
 
 ### Why −52 Cents?
 
@@ -147,12 +147,12 @@ All harmonics shift by the same number of cents (pitch shifting is linear
 in log-frequency space):
 
 | Harmonic | A = 440 Hz series | A = 432 Hz series | Δ cents |
-|:--------:|------------------:|------------------:|--------:|
-| 1st | 440.000 Hz | 432.000 Hz | −31.77 |
-| 2nd | 880.000 Hz | 864.000 Hz | −31.77 |
-| 3rd | 1320.000 Hz | 1296.000 Hz | −31.77 |
-| 4th | 1760.000 Hz | 1728.000 Hz | −31.77 |
-| 5th | 2200.000 Hz | 2160.000 Hz | −31.77 |
+| :------: | ----------------: | ----------------: | ------: |
+|   1st    |        440.000 Hz |        432.000 Hz |  −31.77 |
+|   2nd    |        880.000 Hz |        864.000 Hz |  −31.77 |
+|   3rd    |       1320.000 Hz |       1296.000 Hz |  −31.77 |
+|   4th    |       1760.000 Hz |       1728.000 Hz |  −31.77 |
+|   5th    |       2200.000 Hz |       2160.000 Hz |  −31.77 |
 
 ---
 
@@ -160,44 +160,44 @@ in log-frequency space):
 
 Starting from A₄ = 432 Hz instead of the standard 440 Hz:
 
-| Note | 440 Hz standard | 432 Hz (AudioShift default) |
-|------|----------------:|----------------------------:|
-| C₄ (middle C) | 261.626 Hz | 256.869 Hz |
-| D₄ | 293.665 Hz | 288.327 Hz |
-| E₄ | 329.628 Hz | 323.575 Hz |
-| F₄ | 349.228 Hz | 342.936 Hz |
-| G₄ | 391.995 Hz | 384.873 Hz |
-| A₄ | 440.000 Hz | 432.000 Hz |
-| B₄ | 493.883 Hz | 484.904 Hz |
-| C₅ | 523.251 Hz | 513.738 Hz |
+| Note          | 440 Hz standard | 432 Hz (AudioShift default) |
+| ------------- | --------------: | --------------------------: |
+| C₄ (middle C) |      261.626 Hz |                  256.869 Hz |
+| D₄            |      293.665 Hz |                  288.327 Hz |
+| E₄            |      329.628 Hz |                  323.575 Hz |
+| F₄            |      349.228 Hz |                  342.936 Hz |
+| G₄            |      391.995 Hz |                  384.873 Hz |
+| A₄            |      440.000 Hz |                  432.000 Hz |
+| B₄            |      493.883 Hz |                  484.904 Hz |
+| C₅            |      523.251 Hz |                  513.738 Hz |
 
-*(432 Hz column uses the pure ratio −31.77 cents, not the −52 cent design value.)*
+_(432 Hz column uses the pure ratio −31.77 cents, not the −52 cent design value.)_
 
 ---
 
 ## 9. Historical Context
 
-| Era / Source | A₄ Pitch |
-|---|---|
-| Baroque (Handel, J. S. Bach) | ~415 Hz |
-| 19th-century Paris Opéra | 432–435 Hz |
-| Verdi's 1881 proposal | 435 Hz |
-| ISO 16:1955 (current standard) | **440 Hz** |
-| AudioShift default (`BoardConfig.mk`) | ~426.7 Hz (−52 c) |
-| AudioShift pure-ratio mode | **432.000 Hz** (−31.77 c) |
+| Era / Source                          | A₄ Pitch                  |
+| ------------------------------------- | ------------------------- |
+| Baroque (Handel, J. S. Bach)          | ~415 Hz                   |
+| 19th-century Paris Opéra              | 432–435 Hz                |
+| Verdi's 1881 proposal                 | 435 Hz                    |
+| ISO 16:1955 (current standard)        | **440 Hz**                |
+| AudioShift default (`BoardConfig.mk`) | ~426.7 Hz (−52 c)         |
+| AudioShift pure-ratio mode            | **432.000 Hz** (−31.77 c) |
 
 ---
 
 ## 10. Related Files
 
-| File | Purpose |
-|------|---------|
-| `shared/dsp/src/audio_432hz.cpp` | SoundTouch wrapper — `setPitchSemiTones()` call site |
-| `shared/dsp/include/audio_432hz.h` | Public API — `AudioShift432Hz::setPitchCents()` |
-| `path_b_rom/android/device/samsung/s25plus/BoardConfig.mk` | `CONFIG_AUDIOSHIFT_DSP_DEFAULT_PITCH_CENTS := -52` |
-| `path_c_magisk/module/system/vendor/etc/audio_effects.xml` | ALSA kcontrol declarations |
-| `research/aosp/soundtouch_summary.md` | SoundTouch WSOLA algorithm overview |
+| File                                                       | Purpose                                              |
+| ---------------------------------------------------------- | ---------------------------------------------------- |
+| `shared/dsp/src/audio_432hz.cpp`                           | SoundTouch wrapper — `setPitchSemiTones()` call site |
+| `shared/dsp/include/audio_432hz.h`                         | Public API — `AudioShift432Hz::setPitchCents()`      |
+| `path_b_rom/android/device/samsung/s25plus/BoardConfig.mk` | `CONFIG_AUDIOSHIFT_DSP_DEFAULT_PITCH_CENTS := -52`   |
+| `path_c_magisk/module/system/vendor/etc/audio_effects.xml` | ALSA kcontrol declarations                           |
+| `research/aosp/soundtouch_summary.md`                      | SoundTouch WSOLA algorithm overview                  |
 
 ---
 
-*See also: `scripts/collect_research.sh` — downloads AOSP source and regenerates this document.*
+_See also: `scripts/collect_research.sh` — downloads AOSP source and regenerates this document._

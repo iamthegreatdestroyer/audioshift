@@ -1,0 +1,231 @@
+# galaxy_s25plus_defconfig — Linux kernel config for AudioShift 432Hz Custom ROM
+#
+# Device  : Samsung Galaxy S25+ (SM-S936B)
+# SoC     : Qualcomm Snapdragon 8 Elite (SM8750)
+# Arch    : arm64, ARMv9-A, Cortex-A520 (LITTLE cores)
+# AOSP    : Android 16 (android-16.0.0_r1)
+# Kernel  : sm8750 Generic Kernel Image (GKI) + AudioShift module
+#
+# To build:
+#   cd $AOSP/kernel/samsung/s25plus
+#   make ARCH=arm64 O=out galaxy_s25plus_defconfig
+#   make ARCH=arm64 O=out -j$(nproc) Image modules
+#
+# ============================================================================
+# GKI base (inherits from GKI + sm8750 SOC fragment)
+# ============================================================================
+CONFIG_ARCH_QCOM=y
+CONFIG_ARCH_PINEAPPLE=y
+CONFIG_ARCH_SM8750=y
+
+# ---------------------------------------------------------------------------
+# CPU
+# ---------------------------------------------------------------------------
+CONFIG_ARM64=y
+CONFIG_64BIT=y
+CONFIG_ARM64_4K_PAGES=y
+CONFIG_NR_CPUS=12
+CONFIG_HZ=250
+CONFIG_PREEMPT=y
+
+# ARMv9 features
+CONFIG_ARM64_SVE=y
+CONFIG_ARM64_SME=y
+CONFIG_ARM64_MTE=y          # Memory Tagging Extension (heap safety)
+CONFIG_ARM64_BTI_KERNEL=y   # Branch Target Identification
+
+# ---------------------------------------------------------------------------
+# SoC / Interconnect
+# ---------------------------------------------------------------------------
+CONFIG_QCOM_INTERCONNECT=y
+CONFIG_QCOM_INTERCONNECT_RPMH=y
+CONFIG_QCOM_RPMHPD=y
+CONFIG_QCOM_AOSS_QMP=y
+
+# ---------------------------------------------------------------------------
+# Clock / Power
+# ---------------------------------------------------------------------------
+CONFIG_COMMON_CLK=y
+CONFIG_COMMON_CLK_QCOM=y
+CONFIG_CLK_SM8750=y
+CONFIG_REGULATOR=y
+CONFIG_REGULATOR_RPMH=y
+CONFIG_REGULATOR_QCOM_LABIBB=y
+
+# ---------------------------------------------------------------------------
+# Memory
+# ---------------------------------------------------------------------------
+CONFIG_MEMORY_HOTPLUG=y
+CONFIG_CMA=y
+CONFIG_CMA_SIZE_MBYTES=64
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_ION=y
+CONFIG_ION_SYSTEM_HEAP=y
+CONFIG_ION_CMA_HEAP=y
+CONFIG_DMABUF_HEAPS=y
+CONFIG_DMABUF_HEAPS_SYSTEM=y
+
+# ---------------------------------------------------------------------------
+# Audio subsystem (LPASS + WCD938x + AudioShift)
+# ---------------------------------------------------------------------------
+CONFIG_SND=y
+CONFIG_SND_SOC=y
+CONFIG_SND_SOC_SM8750=y
+CONFIG_SND_SOC_QCOM=y
+CONFIG_SND_SOC_LPASS=y
+CONFIG_SND_SOC_LPASS_SM8750=y
+
+# WCD938x codec (integrated into SM8750 SLIMbus)
+CONFIG_SND_SOC_WCD938X=y
+CONFIG_SND_SOC_WCD938X_SDW=y
+CONFIG_SND_SOC_WSA884X=y
+CONFIG_SND_SOC_BOLERO=y
+
+# ALSA PCM
+CONFIG_SND_PCM=y
+CONFIG_SND_PCM_ELD=y
+CONFIG_SND_PCM_IEC958=y
+CONFIG_SND_TIMER=y
+CONFIG_SND_JACK=y
+
+# Audio DSP offload
+CONFIG_MSM_QDSP6_APRV2_RPROC=y
+CONFIG_MSM_ADSP_LOADER=y
+CONFIG_SND_SOC_MSM_QDSP6=y
+CONFIG_MSM_QDSP6_NOTIFIER=y
+
+# SoundWire bus (for WCD938x connectivity)
+CONFIG_SOUNDWIRE=y
+CONFIG_SOUNDWIRE_QCOM=y
+CONFIG_SOUNDWIRE_CADENCE=y
+
+# ============================================================================
+# AudioShift 432Hz DSP Module
+# ============================================================================
+#
+# CONFIG_AUDIOSHIFT_DSP enables the kernel-level DSP hook module.
+# This module:
+#   1. Registers an ALSA kcontrol "AudioShift Enable" and associated
+#      controls ("AudioShift Pitch Cents", "AudioShift Sample Rate", etc.)
+#   2. Installs a pre-dma callback in the LPASS HDMI/PCM DMA path to
+#      invoke the SoundTouch WSOLA pitch-shift routine before samples
+#      reach the DAC.
+#   3. Exports a /proc/audioshift/status node for runtime diagnostics.
+#
+# CONFIG_AUDIOSHIFT_DSP_BUILTIN=y builds the module into the kernel image.
+# Leave as =m for GKI vendor_dlkm loadable module (preferred for updates).
+#
+CONFIG_AUDIOSHIFT_DSP=m
+CONFIG_AUDIOSHIFT_DSP_DEFAULT_PITCH_CENTS=-52
+CONFIG_AUDIOSHIFT_DSP_DEFAULT_SAMPLE_RATE=48000
+CONFIG_AUDIOSHIFT_DSP_WSOLA_SEQUENCE_MS=40
+CONFIG_AUDIOSHIFT_DSP_WSOLA_SEEKWINDOW_MS=15
+CONFIG_AUDIOSHIFT_DSP_WSOLA_OVERLAP_MS=8
+CONFIG_AUDIOSHIFT_DSP_BUFFER_FRAMES=8192
+CONFIG_AUDIOSHIFT_DSP_DEBUG=n
+
+# ============================================================================
+# USB
+# ============================================================================
+CONFIG_USB=y
+CONFIG_USB_XHCI_HCD=y
+CONFIG_USB_GADGET=y
+CONFIG_USB_CONFIGFS=y
+CONFIG_USB_CONFIGFS_F_FS=y
+CONFIG_USB_CONFIGFS_UEVENT=y
+CONFIG_USB_DWC3=y
+CONFIG_USB_DWCCORE_QTI=y
+# USB audio class (for Type-C DAC/headset support)
+CONFIG_SND_USB_AUDIO=y
+
+# ============================================================================
+# Display
+# ============================================================================
+CONFIG_DRM=y
+CONFIG_DRM_MSM=y
+CONFIG_DRM_MSM_DSI=y
+CONFIG_DRM_PANEL_SAMSUNG_DPHY=y
+CONFIG_QCOM_DISPLAY_WAKELOCK=y
+CONFIG_BACKLIGHT_CLASS_DEVICE=y
+
+# ============================================================================
+# Camera
+# ============================================================================
+CONFIG_VIDEO_V4L2=y
+CONFIG_MEDIA_CONTROLLER=y
+CONFIG_V4L_DRIVERS=y
+CONFIG_VIDEO_QCOM_CAMSS=y
+CONFIG_MEDIA_SUPPORT=y
+
+# ============================================================================
+# Connectivity
+# ============================================================================
+CONFIG_CFG80211=y
+CONFIG_MAC80211=y
+CONFIG_RFKILL=y
+CONFIG_BT=y
+CONFIG_BT_HCIUART=y
+CONFIG_BT_QCOMSMD=y
+CONFIG_MSM_BT_POWER=y
+CONFIG_NFC=y
+
+# ============================================================================
+# Storage
+# ============================================================================
+CONFIG_MMC=y
+CONFIG_MMC_BLOCK=y
+CONFIG_MMC_SDHCI=y
+CONFIG_MMC_SDHCI_MSM=y
+CONFIG_SCSI=y
+CONFIG_BLK_DEV_SD=y
+CONFIG_SCSI_UFS=y
+CONFIG_SCSI_UFS_QCOM=y
+CONFIG_F2FS_FS=y
+CONFIG_EXT4_FS=y
+
+# ============================================================================
+# Security
+# ============================================================================
+CONFIG_SECURITY=y
+CONFIG_SECURITY_SELINUX=y
+CONFIG_SECURITY_SELINUX_BOOTPARAM=y
+CONFIG_INTEGRITY=y
+CONFIG_IMA=y
+CONFIG_IMA_APPRAISE=y
+CONFIG_TRUSTED_KEYS=y
+CONFIG_ENCRYPTED_KEYS=y
+CONFIG_HW_RANDOM=y
+CONFIG_HW_RANDOM_QCOM=y
+
+# ============================================================================
+# Android-specific
+# ============================================================================
+CONFIG_ANDROID=y
+CONFIG_BINDER_IPC=y
+CONFIG_BINDER_IPC_32BIT=n
+CONFIG_ASHMEM=y
+CONFIG_ANDROID_THINLTO=y
+CONFIG_ANDROID_DEBUG_SYMBOLS=n   # disable for production, enable for debugging
+CONFIG_KGDB=n
+
+# ION / DMA-BUF (Android media pipeline)
+CONFIG_ION=y
+CONFIG_DMABUF_HEAPS=y
+
+# Android Common Kernel features
+CONFIG_LTO_CLANG=y
+CONFIG_CFI_CLANG=y
+CONFIG_SHADOW_CALL_STACK=y
+
+# ============================================================================
+# Debugging (disable for production ROM builds)
+# ============================================================================
+CONFIG_DYNAMIC_DEBUG=n
+CONFIG_DEBUG_KERNEL=n
+CONFIG_SLUB_DEBUG=n
+CONFIG_DEBUG_PAGEALLOC=n
+CONFIG_KASAN=n
+CONFIG_UBSAN=n
+CONFIG_KCOV=n
+# Enable the below only when debugging AudioShift kernel module
+# CONFIG_AUDIOSHIFT_DSP_DEBUG is not set

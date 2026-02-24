@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+    audio_policy_configuration.xml — AudioShift 432Hz Custom ROM
+    Device  : Samsung Galaxy S25+ (SM-S936B, SM8750)
+    Path    : path_b_rom/device_configs/ (copied into AOSP tree by build_rom.sh §Step 3)
+    AOSP    : Android 16 (android-16.0.0_r1)
+
+    Differences from device-tree version (path_b_rom/android/device/.../audio_policy_configuration.xml):
+      • Adds Bluetooth A2DP offload module
+      • Adds USB audio HAL module
+      • Adds compressed offload (direct FLAC/MP3 paths)
+      • Includes hearing device (LE Audio) module
+      • AudioShift432Hz effect declared on both PRIMARY and OFFLOAD outputs
+-->
+
+<audioPolicyConfiguration version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <!-- ===================================================================
+         Global Capabilities
+         =================================================================== -->
+    <globalConfiguration speaker_drc_enabled="true"
+                          call_screen_mode_supported="false"
+                          use_primary_decode_offload_route_flag="false"/>
+
+    <!-- ===================================================================
+         AudioShift 432Hz custom effects library
+         =================================================================== -->
+    <effectsConfig>
+        <postprocess>
+            <stream type="music">
+                <apply effect="audioShift432Hz"/>
+            </stream>
+        </postprocess>
+    </effectsConfig>
+
+    <!-- ===================================================================
+         HAL Modules
+         =================================================================== -->
+    <modules>
+
+        <!-- ---------------------------------------------------------------
+             Primary (ALSA/QTI) HAL — Snapdragon 8 Elite / WCD938x codec
+             --------------------------------------------------------------- -->
+        <module name="primary" halVersion="3.0">
+            <attachedDevices>
+                <item>Speaker</item>
+                <item>Built-In Mic</item>
+                <item>Built-In Back Mic</item>
+            </attachedDevices>
+            <defaultOutputDevice>Speaker</defaultOutputDevice>
+            <mixPorts>
+                <!-- Deep buffer — main music path, AudioShift applied here -->
+                <mixPort name="primary output"
+                         role="source"
+                         flags="AUDIO_OUTPUT_FLAG_PRIMARY|AUDIO_OUTPUT_FLAG_DEEP_BUFFER">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    <profile name="" format="AUDIO_FORMAT_PCM_24_BIT_PACKED"
+                             samplingRates="48000,96000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    <effects>
+                        <apply effect="audioShift432Hz"/>
+                    </effects>
+                </mixPort>
+
+                <!-- Fast (low-latency) path -->
+                <mixPort name="fast output"
+                         role="source"
+                         flags="AUDIO_OUTPUT_FLAG_FAST">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                </mixPort>
+
+                <!-- Offload (compressed) path — MP3, AAC, FLAC, etc. -->
+                <mixPort name="offload output"
+                         role="source"
+                         flags="AUDIO_OUTPUT_FLAG_DIRECT|AUDIO_OUTPUT_FLAG_COMPRESS_OFFLOAD|AUDIO_OUTPUT_FLAG_NON_BLOCKING">
+                    <profile name="" format="AUDIO_FORMAT_MP3"
+                             samplingRates="8000,11025,12000,16000,22050,24000,32000,44100,48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO,AUDIO_CHANNEL_OUT_MONO"/>
+                    <profile name="" format="AUDIO_FORMAT_AAC"
+                             samplingRates="8000,11025,12000,16000,22050,24000,32000,44100,48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO,AUDIO_CHANNEL_OUT_MONO"/>
+                    <profile name="" format="AUDIO_FORMAT_FLAC"
+                             samplingRates="16000,44100,48000,88200,96000,176400,192000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    <effects>
+                        <apply effect="audioShift432Hz"/>
+                    </effects>
+                </mixPort>
+
+                <!-- Voice call uplink -->
+                <mixPort name="voice_tx" role="source" flags="AUDIO_OUTPUT_FLAG_VOIP_RX">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="8000,16000,48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_MONO,AUDIO_CHANNEL_OUT_STEREO"/>
+                </mixPort>
+
+                <!-- Capture ports -->
+                <mixPort name="primary input" role="sink">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="8000,11025,16000,22050,32000,44100,48000"
+                             channelMasks="AUDIO_CHANNEL_IN_MONO,AUDIO_CHANNEL_IN_STEREO,AUDIO_CHANNEL_IN_FRONT_BACK"/>
+                </mixPort>
+                <mixPort name="fast input" role="sink" flags="AUDIO_INPUT_FLAG_FAST">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000"
+                             channelMasks="AUDIO_CHANNEL_IN_MONO,AUDIO_CHANNEL_IN_STEREO"/>
+                </mixPort>
+            </mixPorts>
+
+            <devicePorts>
+                <devicePort tagName="Speaker" type="AUDIO_DEVICE_OUT_SPEAKER" role="sink">
+                    <gains>
+                        <gain name="gain_1" mode="AUDIO_GAIN_MODE_JOINT"
+                              minValueMB="-8400" maxValueMB="0" defaultValueMB="-3000" stepValueMB="100"/>
+                    </gains>
+                </devicePort>
+                <devicePort tagName="Headset" type="AUDIO_DEVICE_OUT_WIRED_HEADSET" role="sink"/>
+                <devicePort tagName="Headphones" type="AUDIO_DEVICE_OUT_WIRED_HEADPHONE" role="sink"/>
+                <devicePort tagName="USB Headphones" type="AUDIO_DEVICE_OUT_USB_HEADSET" role="sink"/>
+                <devicePort tagName="BT SCO" type="AUDIO_DEVICE_OUT_BLUETOOTH_SCO" role="sink"/>
+                <devicePort tagName="Built-In Mic" type="AUDIO_DEVICE_IN_BUILTIN_MIC" role="source"/>
+                <devicePort tagName="Built-In Back Mic" type="AUDIO_DEVICE_IN_BACK_MIC" role="source"/>
+                <devicePort tagName="Wired Headset Mic" type="AUDIO_DEVICE_IN_WIRED_HEADSET" role="source"/>
+                <devicePort tagName="BT SCO Headset Mic" type="AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET" role="source"/>
+                <devicePort tagName="USB In" type="AUDIO_DEVICE_IN_USB_HEADSET" role="source"/>
+            </devicePorts>
+
+            <routes>
+                <route type="mix" sink="Speaker"          sources="primary output,fast output,offload output"/>
+                <route type="mix" sink="Headphones"       sources="primary output,fast output,offload output"/>
+                <route type="mix" sink="Headset"          sources="primary output,fast output,offload output"/>
+                <route type="mix" sink="USB Headphones"   sources="primary output,fast output,offload output"/>
+                <route type="mix" sink="BT SCO"           sources="voice_tx"/>
+                <route type="mix" sink="primary input"    sources="Built-In Mic,Built-In Back Mic,Wired Headset Mic,BT SCO Headset Mic,USB In"/>
+                <route type="mix" sink="fast input"       sources="Built-In Mic"/>
+            </routes>
+        </module>
+
+        <!-- ---------------------------------------------------------------
+             Bluetooth A2DP — offload path
+             --------------------------------------------------------------- -->
+        <module name="a2dp" halVersion="2.0">
+            <attachedDevices>
+                <item>BT A2DP Out</item>
+                <item>BT A2DP Headphones</item>
+            </attachedDevices>
+            <mixPorts>
+                <mixPort name="a2dp output"
+                         role="source"
+                         flags="AUDIO_OUTPUT_FLAG_NONE">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="44100,48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    <effects>
+                        <apply effect="audioShift432Hz"/>
+                    </effects>
+                </mixPort>
+                <mixPort name="a2dp input" role="sink">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="44100,48000"
+                             channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+                </mixPort>
+            </mixPorts>
+            <devicePorts>
+                <devicePort tagName="BT A2DP Out"         type="AUDIO_DEVICE_OUT_BLUETOOTH_A2DP"        role="sink"/>
+                <devicePort tagName="BT A2DP Headphones"  type="AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES" role="sink"/>
+                <devicePort tagName="BT A2DP In"          type="AUDIO_DEVICE_IN_BLUETOOTH_A2DP"         role="source"/>
+            </devicePorts>
+            <routes>
+                <route type="mix" sink="BT A2DP Out"        sources="a2dp output"/>
+                <route type="mix" sink="BT A2DP Headphones" sources="a2dp output"/>
+                <route type="mix" sink="a2dp input"         sources="BT A2DP In"/>
+            </routes>
+        </module>
+
+        <!-- ---------------------------------------------------------------
+             USB audio
+             --------------------------------------------------------------- -->
+        <module name="usb" halVersion="2.0">
+            <mixPorts>
+                <mixPort name="usb_device output"
+                         role="source"
+                         flags="AUDIO_OUTPUT_FLAG_DIRECT">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="44100,48000,96000,192000"
+                             channelMasks="AUDIO_CHANNEL_OUT_MONO,AUDIO_CHANNEL_OUT_STEREO"/>
+                </mixPort>
+                <mixPort name="usb_device input" role="sink">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="8000,11025,16000,22050,32000,44100,48000"
+                             channelMasks="AUDIO_CHANNEL_IN_MONO,AUDIO_CHANNEL_IN_STEREO"/>
+                </mixPort>
+            </mixPorts>
+            <devicePorts>
+                <devicePort tagName="USB Device Out" type="AUDIO_DEVICE_OUT_USB_DEVICE" role="sink"/>
+                <devicePort tagName="USB Device In"  type="AUDIO_DEVICE_IN_USB_DEVICE"  role="source"/>
+            </devicePorts>
+            <routes>
+                <route type="mix" sink="USB Device Out" sources="usb_device output"/>
+                <route type="mix" sink="usb_device input" sources="USB Device In"/>
+            </routes>
+        </module>
+
+        <!-- ---------------------------------------------------------------
+             Remote submix (screen-cast / VoIP loopback)
+             --------------------------------------------------------------- -->
+        <module name="r_submix" halVersion="2.0">
+            <attachedDevices>
+                <item>Remote Submix In</item>
+            </attachedDevices>
+            <defaultOutputDevice>Remote Submix Out</defaultOutputDevice>
+            <mixPorts>
+                <mixPort name="submix output" role="source" flags="AUDIO_OUTPUT_FLAG_NONE">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000"
+                             channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                </mixPort>
+                <mixPort name="submix input" role="sink">
+                    <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                             samplingRates="48000"
+                             channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+                </mixPort>
+            </mixPorts>
+            <devicePorts>
+                <devicePort tagName="Remote Submix Out" type="AUDIO_DEVICE_OUT_REMOTE_SUBMIX" role="sink"/>
+                <devicePort tagName="Remote Submix In"  type="AUDIO_DEVICE_IN_REMOTE_SUBMIX"  role="source"/>
+            </devicePorts>
+            <routes>
+                <route type="mix" sink="Remote Submix Out" sources="submix output"/>
+                <route type="mix" sink="submix input"      sources="Remote Submix In"/>
+            </routes>
+        </module>
+
+    </modules>
+
+    <!-- ===================================================================
+         AudioShift 432Hz Effect Declaration
+         =================================================================== -->
+    <effects>
+        <effect name="audioShift432Hz"
+                library="libaudioshift432"
+                uuid="f22a9ce0-7a11-11ee-b962-0242ac120002"/>
+    </effects>
+
+</audioPolicyConfiguration>

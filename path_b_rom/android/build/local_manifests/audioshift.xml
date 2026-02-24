@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    AudioShift local manifest for AOSP Android 16 overlay.
+
+    USAGE:
+      Copy (or symlink) this file to:
+        <AOSP_ROOT>/.repo/local_manifests/audioshift.xml
+
+      Then run:
+        repo sync -j8
+
+    setup_aosp_environment.sh copies this automatically.
+
+    Repositories listed here are placeholders — replace the fetch URL
+    with your actual GitHub org / Gerrit server once repos are created.
+
+    Branch convention:
+      main           → stable AudioShift releases
+      audioshift-a16 → AOSP Android 16 integration branch
+-->
+<manifest>
+
+    <!-- ====================================================================
+         Remote definition — AudioShift GitHub organisation.
+         Replace "audioshift" with your actual GH org or mirror URL.
+         ==================================================================== -->
+    <remote name="audioshift-github"
+            fetch="https://github.com/audioshift/"
+            review="https://github.com/audioshift/" />
+
+    <!-- ====================================================================
+         Galaxy S25+ device tree
+         Mirrors the contents of path_b_rom/android/device/samsung/s25plus/
+         into device/samsung/s25plus inside the AOSP tree.
+         ==================================================================== -->
+    <project name="device_samsung_s25plus"
+             path="device/samsung/s25plus"
+             remote="audioshift-github"
+             revision="audioshift-a16"
+             groups="device" />
+
+    <!-- ====================================================================
+         AudioFlinger patch — adds AudioShift432Effect to AudioFlinger.
+         Overlays frameworks/av/services/audioflinger/ with:
+           • AudioShift432Effect.h / .cpp
+           • Updated Android.bp
+         ==================================================================== -->
+    <project name="frameworks_av_audioshift"
+             path="frameworks/av"
+             remote="audioshift-github"
+             revision="audioshift-a16"
+             groups="audioshift"
+             clone-depth="1" />
+
+    <!-- ====================================================================
+         AudioShift kernel patches for Galaxy S25+ (Snapdragon 8 Elite).
+         Provides galaxy_s25plus_defconfig and audioshift_dsp.patch.
+         Applied via path_b_rom/build_scripts/apply_patches.sh.
+         ==================================================================== -->
+    <project name="kernel_samsung_s25plus_audioshift"
+             path="kernel/samsung/s25plus"
+             remote="audioshift-github"
+             revision="audioshift-a16"
+             groups="kernel"
+             clone-depth="1" />
+
+    <!-- ====================================================================
+         AudioShift HAL (hardware/audioshift)
+         Provides libaudioshift432 and the HIDL/AIDL service.
+         ==================================================================== -->
+    <project name="hardware_audioshift"
+             path="hardware/audioshift"
+             remote="audioshift-github"
+             revision="audioshift-a16"
+             groups="audioshift" />
+
+</manifest>

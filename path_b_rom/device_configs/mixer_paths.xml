@@ -27,15 +27,16 @@
          platform driver loaded from path_b_rom/kernel/audioshift_dsp.patch.
          =================================================================== -->
     <path name="audioshift-enable">
-        <ctl name="AudioShift Enable"               value="1"/>
-        <ctl name="AudioShift Pitch Cents"          value="-52"/>   <!-- -0.5296 semitones -->
-        <ctl name="AudioShift Sample Rate"          value="48000"/>
-        <ctl name="AudioShift Buffer Frames"        value="8192"/>
-        <ctl name="AudioShift Engine"               value="WSOLA"/>
+        <ctl name="AudioShift Enable" value="1"/>
+        <ctl name="AudioShift Pitch Cents" value="-52"/>
+        <!-- -0.5296 semitones -->
+        <ctl name="AudioShift Sample Rate" value="48000"/>
+        <ctl name="AudioShift Buffer Frames" value="8192"/>
+        <ctl name="AudioShift Engine" value="WSOLA"/>
     </path>
 
     <path name="audioshift-disable">
-        <ctl name="AudioShift Enable"               value="0"/>
+        <ctl name="AudioShift Enable" value="0"/>
     </path>
 
     <!-- ===================================================================
@@ -43,13 +44,13 @@
          =================================================================== -->
     <path name="speaker">
         <path name="audioshift-enable"/>
-        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia1"    value="1"/>
-        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia2"    value="1"/>
-        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia7"    value="1"/>
-        <ctl name="WSA RX_0 MUX"                                value="AIF1_PB"/>
-        <ctl name="SpkrLeft WSA PA Enable"                      value="1"/>
-        <ctl name="SpkrRight WSA PA Enable"                     value="1"/>
-        <ctl name="WSA_SPKR_PA_Enable"                          value="1"/>
+        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia2" value="1"/>
+        <ctl name="WSA_CDC_DMA_RX_0 Audio Mixer MultiMedia7" value="1"/>
+        <ctl name="WSA RX_0 MUX" value="AIF1_PB"/>
+        <ctl name="SpkrLeft WSA PA Enable" value="1"/>
+        <ctl name="SpkrRight WSA PA Enable" value="1"/>
+        <ctl name="WSA_SPKR_PA_Enable" value="1"/>
     </path>
 
     <path name="speaker-safe">
@@ -61,17 +62,17 @@
          =================================================================== -->
     <path name="headphones">
         <path name="audioshift-enable"/>
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1"     value="1"/>
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia2"     value="1"/>
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia7"     value="1"/>
-        <ctl name="RX INT0_1 MIX1 INP0"                         value="RX0"/>
-        <ctl name="RX INT1_1 MIX1 INP0"                         value="RX1"/>
-        <ctl name="HPHL_COMP Switch"                            value="1"/>
-        <ctl name="HPHR_COMP Switch"                            value="1"/>
-        <ctl name="HPHL Switch"                                 value="1"/>
-        <ctl name="HPHR Switch"                                 value="1"/>
-        <ctl name="WCD_HPHL_COMP Switch"                        value="1"/>
-        <ctl name="WCD_HPHR_COMP Switch"                        value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia2" value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia7" value="1"/>
+        <ctl name="RX INT0_1 MIX1 INP0" value="RX0"/>
+        <ctl name="RX INT1_1 MIX1 INP0" value="RX1"/>
+        <ctl name="HPHL_COMP Switch" value="1"/>
+        <ctl name="HPHR_COMP Switch" value="1"/>
+        <ctl name="HPHL Switch" value="1"/>
+        <ctl name="HPHR Switch" value="1"/>
+        <ctl name="WCD_HPHL_COMP Switch" value="1"/>
+        <ctl name="WCD_HPHR_COMP Switch" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -87,11 +88,11 @@
          to avoid adding latency / perceived reverb during calls.
          =================================================================== -->
     <path name="earpiece">
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1"    value="1"/>
-        <ctl name="RX INT0_1 MIX1 INP0"                        value="RX0"/>
-        <ctl name="HPHL Switch"                                 value="1"/>
-        <ctl name="EAR PA Gain"                                 value="G_6_DB"/>
-        <ctl name="EAR_S Switch"                                value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="RX INT0_1 MIX1 INP0" value="RX0"/>
+        <ctl name="HPHL Switch" value="1"/>
+        <ctl name="EAR PA Gain" value="G_6_DB"/>
+        <ctl name="EAR_S Switch" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -99,14 +100,14 @@
          AudioShift NOT applied (processed at Bluetooth stack level)
          =================================================================== -->
     <path name="bt-sco">
-        <ctl name="SLIM_7_RX Audio Mixer MultiMedia1"           value="1"/>
-        <ctl name="BT_RX VolumeStepLeft"                        value="7"/>
-        <ctl name="BT_RX VolumeStepRight"                       value="7"/>
+        <ctl name="SLIM_7_RX Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="BT_RX VolumeStepLeft" value="7"/>
+        <ctl name="BT_RX VolumeStepRight" value="7"/>
     </path>
 
     <path name="bt-sco-wb">
         <path name="bt-sco"/>
-        <ctl name="SLIM_7_RX Sample Rate"                       value="16000"/>
+        <ctl name="SLIM_7_RX Sample Rate" value="16000"/>
     </path>
 
     <!-- ===================================================================
@@ -116,8 +117,8 @@
          =================================================================== -->
     <path name="bt-a2dp">
         <path name="audioshift-enable"/>
-        <ctl name="SLIM_7_RX Audio Mixer MultiMedia1"           value="1"/>
-        <ctl name="SLIM_7_RX Audio Mixer MultiMedia2"           value="1"/>
+        <ctl name="SLIM_7_RX Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="SLIM_7_RX Audio Mixer MultiMedia2" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -125,9 +126,9 @@
          =================================================================== -->
     <path name="usb-headphones">
         <path name="audioshift-enable"/>
-        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia1"        value="1"/>
-        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia2"        value="1"/>
-        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia7"        value="1"/>
+        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia2" value="1"/>
+        <ctl name="USB_AUDIO_RX Audio Mixer MultiMedia7" value="1"/>
     </path>
 
     <path name="usb-headset">
@@ -138,43 +139,43 @@
          Microphone — Built-in main (bottom)
          =================================================================== -->
     <path name="mic1">
-        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1"    value="1"/>
-        <ctl name="TX SMIC MUX0"                               value="SWR_MIC9"/>
-        <ctl name="ADC1_MIXER Switch"                          value="1"/>
-        <ctl name="ADC1 Volume"                                value="60"/>
-        <ctl name="DEC0 MUX"                                   value="SWR_MIC"/>
+        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="TX SMIC MUX0" value="SWR_MIC9"/>
+        <ctl name="ADC1_MIXER Switch" value="1"/>
+        <ctl name="ADC1 Volume" value="60"/>
+        <ctl name="DEC0 MUX" value="SWR_MIC"/>
     </path>
 
     <!-- ===================================================================
          Microphone — Built-in secondary (top / noise-cancel)
          =================================================================== -->
     <path name="mic2">
-        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1"    value="1"/>
-        <ctl name="TX SMIC MUX1"                               value="SWR_MIC10"/>
-        <ctl name="ADC2_MIXER Switch"                          value="1"/>
-        <ctl name="ADC2 Volume"                                value="60"/>
-        <ctl name="DEC1 MUX"                                   value="SWR_MIC"/>
+        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="TX SMIC MUX1" value="SWR_MIC10"/>
+        <ctl name="ADC2_MIXER Switch" value="1"/>
+        <ctl name="ADC2 Volume" value="60"/>
+        <ctl name="DEC1 MUX" value="SWR_MIC"/>
     </path>
 
     <!-- ===================================================================
          Microphone — Headset (CTIA 3-pole)
          =================================================================== -->
     <path name="headset-mic">
-        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1"    value="1"/>
-        <ctl name="TX DMIC MUX0"                               value="DMIC1"/>
-        <ctl name="ADC3_MIXER Switch"                          value="1"/>
-        <ctl name="ADC3 Volume"                                value="60"/>
+        <ctl name="TX_CDC_DMA_TX_3 Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="TX DMIC MUX0" value="DMIC1"/>
+        <ctl name="ADC3_MIXER Switch" value="1"/>
+        <ctl name="ADC3 Volume" value="60"/>
     </path>
 
     <!-- ===================================================================
          Voice call paths
          =================================================================== -->
     <path name="incall-rec-uplink">
-        <ctl name="INCALL_RECORD_TX Audio Mixer MultiMedia1"   value="1"/>
+        <ctl name="INCALL_RECORD_TX Audio Mixer MultiMedia1" value="1"/>
     </path>
 
     <path name="incall-rec-downlink">
-        <ctl name="INCALL_RECORD_RX Audio Mixer MultiMedia1"   value="1"/>
+        <ctl name="INCALL_RECORD_RX Audio Mixer MultiMedia1" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -190,7 +191,7 @@
          =================================================================== -->
     <path name="deep-buffer-playback">
         <path name="audioshift-enable"/>
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1"    value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia1" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -198,7 +199,7 @@
          AudioShift NOT applied to preserve minimal latency.
          =================================================================== -->
     <path name="low-latency-playback">
-        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia5"    value="1"/>
+        <ctl name="RX_CDC_DMA_RX_0 Audio Mixer MultiMedia5" value="1"/>
     </path>
 
     <!-- ===================================================================
@@ -206,9 +207,9 @@
          =================================================================== -->
     <path name="audioshift-loopback-test">
         <path name="audioshift-enable"/>
-        <ctl name="LOOPBACK Audio Mixer MultiMedia1"            value="1"/>
-        <ctl name="AudioShift Enable"                           value="1"/>
-        <ctl name="AudioShift Debug Mode"                       value="1"/>
+        <ctl name="LOOPBACK Audio Mixer MultiMedia1" value="1"/>
+        <ctl name="AudioShift Enable" value="1"/>
+        <ctl name="AudioShift Debug Mode" value="1"/>
     </path>
 
 </mixer>

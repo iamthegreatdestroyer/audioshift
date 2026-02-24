@@ -301,7 +301,14 @@ jobs:
   build_summary:
     name: "Build Summary"
     runs-on: ubuntu-22.04
-    needs: [host_unit_tests, python_tests, clang_format, ndk_cross_compile, regression_gate]
+    needs:
+      [
+        host_unit_tests,
+        python_tests,
+        clang_format,
+        ndk_cross_compile,
+        regression_gate,
+      ]
     if: always()
 
     steps:

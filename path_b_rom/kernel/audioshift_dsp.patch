@@ -39,7 +39,7 @@ index aabbccdd..11223344 100644
 @@ -45,6 +45,10 @@
  #include <linux/dma-mapping.h>
  #include "lpass.h"
- 
+
 +#if IS_ENABLED(CONFIG_AUDIOSHIFT_DSP)
 +#include "audioshift/audioshift.h"
 +#endif
@@ -50,7 +50,7 @@ index aabbccdd..11223344 100644
 @@ -189,6 +193,74 @@ static void lpass_platform_pcm_free(struct snd_soc_component *component,
  	kfree(prtd);
  }
- 
+
 +/**
 + * lpass_audioshift_pre_dma_callback - AudioShift 432Hz pitch-shift hook
 + * @data: Pointer to lpass_pcm_data (contains substream and period info)
@@ -389,5 +389,5 @@ index aabbccdd..66778899 100644
 @@ -last +2 @@
 +
 +obj-$(CONFIG_AUDIOSHIFT_DSP) += audioshift/
--- 
+--
 2.43.0

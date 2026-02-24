@@ -296,7 +296,136 @@ jobs:
         run: ./tests/performance/build/bench_latency
 
   # ══════════════════════════════════════════════════════════════════════════
-  # JOB 6: Build Summary
+  # JOB 6 (Track 3.1): Device Integration Tests — self-hosted runner
+  # Requires a machine with ADB, a rooted Samsung Galaxy S25+ running the
+  # AudioShift Magisk module, registered as a GitHub Actions self-hosted
+  # runner.  See scripts/setup_selfhosted_runner.sh for setup instructions.
+  # continue-on-error: true — runner may be offline between sessions.
+  # ══════════════════════════════════════════════════════════════════════════
+  device_test:
+    name: "Device Integration Tests (self-hosted)"
+    runs-on: [self-hosted, android-device]
+    needs: [ndk_cross_compile]
+    if: |
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
+    continue-on-error: true   # self-hosted runner may not always be present
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ARM64 libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: arm64-libs-${{ github.run_id }}
+          path: dist/
+
+      - name: Create results directory
+        run: mkdir -p tests/results
+
+      - name: Run device integration tests
+        run: |
+          bash tests/integration/test_432hz_device.sh \
+            --zip dist/audioshift432-*.zip
+        timeout-minutes: 20
+
+      - name: Run on-device latency benchmarks
+        run: |
+          bash tests/performance/benchmark_latency.sh \
+            --samples 20 \
+            --csv tests/results/ci_latency_${{ github.run_id }}.csv
+        timeout-minutes: 8
+
+      - name: Upload device test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-test-results-${{ github.run_id }}
+          path: tests/results/
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 7 (Track 3.3): Code Coverage — lcov + Codecov
+  # Rebuilds the DSP host library with -fprofile-arcs -ftest-coverage,
+  # runs all host unit tests, captures lcov data, strips system headers,
+  # and uploads both to Codecov and as a GitHub artifact.
+  # ══════════════════════════════════════════════════════════════════════════
+  coverage:
+    name: "Code Coverage (lcov + Codecov)"
+    runs-on: ubuntu-22.04
+    needs: [host_unit_tests]
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install coverage tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build g++-12 lcov libgtest-dev
+
+      - name: Configure DSP library with coverage instrumentation
+        run: |
+          cmake -B shared/dsp/build-cov \
+            -S shared/dsp \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage" \
+            -DCMAKE_CXX_FLAGS="--coverage -fprofile-arcs -ftest-coverage" \
+            -DBUILD_TESTING=ON
+
+      - name: Build DSP library with coverage
+        run: cmake --build shared/dsp/build-cov --parallel $(nproc)
+
+      - name: Run tests (with coverage data collection)
+        working-directory: shared/dsp/build-cov
+        run: ctest --output-on-failure --timeout 60
+
+      - name: Capture lcov coverage data
+        run: |
+          lcov --capture \
+               --directory shared/dsp/build-cov \
+               --output-file coverage.info \
+               --rc lcov_branch_coverage=1
+
+      - name: Remove system and third-party paths
+        run: |
+          lcov --remove coverage.info \
+               '/usr/*' \
+               '*/third_party/*' \
+               '*/tests/*' \
+               '*/build-cov/*/_deps/*' \
+               --output-file coverage.info \
+               --rc lcov_branch_coverage=1
+
+      - name: Print coverage summary
+        run: lcov --list coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.info
+          flags: dsp-library
+          name: audioshift-dsp-coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload lcov data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_id }}
+          path: coverage.info
+          retention-days: 14
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 8: Build Summary  (Track 3 — now includes device_test + coverage)
   # ══════════════════════════════════════════════════════════════════════════
   build_summary:
     name: "Build Summary"
@@ -308,6 +437,8 @@ jobs:
         clang_format,
         ndk_cross_compile,
         regression_gate,
+        device_test,
+        coverage,
       ]
     if: always()
 
@@ -318,11 +449,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Host Unit Tests  | ${{ needs.host_unit_tests.result  }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Python FFT Tests | ${{ needs.python_tests.result     }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Clang-Format     | ${{ needs.clang_format.result     }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| NDK Cross-Compile| ${{ needs.ndk_cross_compile.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Regression Gate  | ${{ needs.regression_gate.result  }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Host Unit Tests      | ${{ needs.host_unit_tests.result  }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python FFT Tests     | ${{ needs.python_tests.result     }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Clang-Format         | ${{ needs.clang_format.result     }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NDK Cross-Compile    | ${{ needs.ndk_cross_compile.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Regression Gate      | ${{ needs.regression_gate.result  }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Device Tests         | ${{ needs.device_test.result      }} *(self-hosted, optional)* |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Coverage        | ${{ needs.coverage.result         }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if any required job failed
         if: |
@@ -330,5 +463,8 @@ jobs:
           needs.python_tests.result      == 'failure' ||
           needs.clang_format.result      == 'failure' ||
           needs.ndk_cross_compile.result == 'failure' ||
-          needs.regression_gate.result   == 'failure'
+          needs.regression_gate.result   == 'failure' ||
+          needs.coverage.result          == 'failure'
         run: exit 1
+        # Note: device_test is intentionally excluded from the failure gate
+        # because the self-hosted runner may not always be available.

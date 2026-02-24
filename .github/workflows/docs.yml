@@ -14,89 +14,89 @@
 name: "AudioShift — Documentation"
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        branches: [main]
+    workflow_dispatch:
 
 # GitHub Pages requires these top-level permissions
 permissions:
-  contents: read
-  pages:    write
-  id-token: write
+    contents: read
+    pages: write
+    id-token: write
 
 # Allow only one concurrent Pages deploy; queue later runs, cancel in-progress
 concurrency:
-  group: "pages"
-  cancel-in-progress: true
+    group: "pages"
+    cancel-in-progress: true
 
 jobs:
-  # ──────────────────────────────────────────────────────────────────────────
-  build_docs:
-    name: "Build Documentation Site"
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    # ──────────────────────────────────────────────────────────────────────────
+    build_docs:
+        name: "Build Documentation Site"
+        runs-on: ubuntu-22.04
+        timeout-minutes: 20
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0         # full history for git metadata
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # full history for git metadata
 
-      # ── Python + MkDocs ──────────────────────────────────────────────────
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+            # ── Python + MkDocs ──────────────────────────────────────────────────
+            - name: Set up Python 3.11
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+                  cache: pip
 
-      - name: Install MkDocs + Material theme
-        run: pip install "mkdocs-material>=9.5"
+            - name: Install MkDocs + Material theme
+              run: pip install "mkdocs-material>=9.5"
 
-      # ── Doxygen ──────────────────────────────────────────────────────────
-      - name: Install Doxygen
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends doxygen
+            # ── Doxygen ──────────────────────────────────────────────────────────
+            - name: Install Doxygen
+              run: |
+                  sudo apt-get update -qq
+                  sudo apt-get install -y --no-install-recommends doxygen
 
-      # ── Generate API docs ─────────────────────────────────────────────────
-      - name: Generate C++ API docs (Doxygen)
-        run: doxygen Doxyfile
+            # ── Generate API docs ─────────────────────────────────────────────────
+            - name: Generate C++ API docs (Doxygen)
+              run: doxygen Doxyfile
 
-      # ── Build prose site ──────────────────────────────────────────────────
-      - name: Build MkDocs site
-        run: mkdocs build --strict --site-dir site
+            # ── Build prose site ──────────────────────────────────────────────────
+            - name: Build MkDocs site
+              run: mkdocs build --strict --site-dir site
 
-      # ── Merge Doxygen into site/api/ ──────────────────────────────────────
-      - name: Merge Doxygen output into site/api/
-        run: |
-          mkdir -p site/api
-          if [ -d docs/generated/html ]; then
-            cp -r docs/generated/html/. site/api/
-            echo "Doxygen HTML merged into site/api/"
-          else
-            echo "Warning: Doxygen output not found at docs/generated/html — skipping merge"
-            mkdir -p site/api
-            echo "<html><body><p>API docs not yet generated.</p></body></html>" > site/api/index.html
-          fi
+            # ── Merge Doxygen into site/api/ ──────────────────────────────────────
+            - name: Merge Doxygen output into site/api/
+              run: |
+                  mkdir -p site/api
+                  if [ -d docs/generated/html ]; then
+                    cp -r docs/generated/html/. site/api/
+                    echo "Doxygen HTML merged into site/api/"
+                  else
+                    echo "Warning: Doxygen output not found at docs/generated/html — skipping merge"
+                    mkdir -p site/api
+                    echo "<html><body><p>API docs not yet generated.</p></body></html>" > site/api/index.html
+                  fi
 
-      # ── Upload Pages artifact ─────────────────────────────────────────────
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
+            # ── Upload Pages artifact ─────────────────────────────────────────────
+            - name: Upload GitHub Pages artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: site
 
-  # ──────────────────────────────────────────────────────────────────────────
-  deploy_pages:
-    name: "Deploy to GitHub Pages"
-    needs: build_docs
-    runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    # ──────────────────────────────────────────────────────────────────────────
+    deploy_pages:
+        name: "Deploy to GitHub Pages"
+        needs: build_docs
+        runs-on: ubuntu-22.04
+        timeout-minutes: 10
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
 
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

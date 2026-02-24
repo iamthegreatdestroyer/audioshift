@@ -35,10 +35,10 @@ setpoint — see [Architecture](ARCHITECTURE.md) §3 for the four-point rational
 
 ## Implementation Paths
 
-| Path | Approach | Root Required | Flash Required | Status |
-|------|----------|:---:|:---:|--------|
-| **PATH-C: Magisk Module** | Inject via Magisk, patch `libaudioclient.so` | ✅ Yes | ❌ No | Primary |
-| **PATH-B: Custom ROM** | AOSP build-system integration, `AudioEffect.cpp` patch | ✅ Yes | ✅ Yes | Research |
+| Path                      | Approach                                               | Root Required | Flash Required | Status   |
+| ------------------------- | ------------------------------------------------------ | :-----------: | :------------: | -------- |
+| **PATH-C: Magisk Module** | Inject via Magisk, patch `libaudioclient.so`           |    ✅ Yes     |     ❌ No      | Primary  |
+| **PATH-B: Custom ROM**    | AOSP build-system integration, `AudioEffect.cpp` patch |    ✅ Yes     |     ✅ Yes     | Research |
 
 ---
 
@@ -46,35 +46,41 @@ setpoint — see [Architecture](ARCHITECTURE.md) §3 for the four-point rational
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch: **[Getting Started](GETTING_STARTED.md)**
+- :material-rocket-launch: **[Getting Started](GETTING_STARTED.md)**
 
-    ---
-    Install AudioShift on a rooted device in under 10 minutes.
+  ***
 
--   :material-floor-plan: **[Architecture](ARCHITECTURE.md)**
+  Install AudioShift on a rooted device in under 10 minutes.
 
-    ---
-    DSP pipeline design, SoundTouch integration, hook strategy.
+- :material-floor-plan: **[Architecture](ARCHITECTURE.md)**
 
--   :material-api: **[API Reference](API_REFERENCE.md)**
+  ***
 
-    ---
-    C++ DSP library reference — audio_432hz, audio_pipeline.
+  DSP pipeline design, SoundTouch integration, hook strategy.
 
--   :material-devices: **[Device Support](DEVICE_SUPPORT.md)**
+- :material-api: **[API Reference](API_REFERENCE.md)**
 
-    ---
-    Tested hardware matrix, known limitations, compatibility notes.
+  ***
 
--   :material-wrench: **[Troubleshooting](TROUBLESHOOTING.md)**
+  C++ DSP library reference — audio_432hz, audio_pipeline.
 
-    ---
-    Common problems, log collection, debug builds.
+- :material-devices: **[Device Support](DEVICE_SUPPORT.md)**
 
--   :material-account-group: **[Development Guide](DEVELOPMENT_GUIDE.md)**
+  ***
 
-    ---
-    Build from source, run tests, submit contributions.
+  Tested hardware matrix, known limitations, compatibility notes.
+
+- :material-wrench: **[Troubleshooting](TROUBLESHOOTING.md)**
+
+  ***
+
+  Common problems, log collection, debug builds.
+
+- :material-account-group: **[Development Guide](DEVELOPMENT_GUIDE.md)**
+
+  ***
+
+  Build from source, run tests, submit contributions.
 
 </div>
 
@@ -82,12 +88,12 @@ setpoint — see [Architecture](ARCHITECTURE.md) §3 for the four-point rational
 
 ## Requirements
 
-| Requirement | Minimum |
-|-------------|---------|
-| Android version | 12 (API 31) |
-| Root solution | Magisk v26+ (PATH-C) or AOSP build (PATH-B) |
-| Architecture | `arm64-v8a` |
-| Tested device | Samsung Galaxy S25+ (SM-S926B) — Android 15 / One UI 7 |
+| Requirement     | Minimum                                                |
+| --------------- | ------------------------------------------------------ |
+| Android version | 12 (API 31)                                            |
+| Root solution   | Magisk v26+ (PATH-C) or AOSP build (PATH-B)            |
+| Architecture    | `arm64-v8a`                                            |
+| Tested device   | Samsung Galaxy S25+ (SM-S926B) — Android 15 / One UI 7 |
 
 ---
 
@@ -95,18 +101,18 @@ setpoint — see [Architecture](ARCHITECTURE.md) §3 for the four-point rational
 
 AudioShift is under active development. Current tracking:
 
-| Track | Deliverable | Status |
-|-------|-------------|--------|
-| Track 0 | CI infrastructure, living docs | ✅ Complete |
-| Track 1 | PATH-C Magisk validation scripts | ✅ Complete |
-| Track 2 | PATH-B Custom ROM skeleton (AOSP) | ✅ Complete |
+| Track   | Deliverable                                    | Status      |
+| ------- | ---------------------------------------------- | ----------- |
+| Track 0 | CI infrastructure, living docs                 | ✅ Complete |
+| Track 1 | PATH-C Magisk validation scripts               | ✅ Complete |
+| Track 2 | PATH-B Custom ROM skeleton (AOSP)              | ✅ Complete |
 | Track 3 | CI expansion: 8-job pipeline, research scripts | ✅ Complete |
-| Track 4 | Documentation & Community (this site) | ✅ Complete |
+| Track 4 | Documentation & Community (this site)          | ✅ Complete |
 
 ---
 
 !!! tip "New to AudioShift?"
-    Start with [Getting Started](GETTING_STARTED.md) to install the Magisk module on your device.
+Start with [Getting Started](GETTING_STARTED.md) to install the Magisk module on your device.
 
 !!! info "Developer?"
-    See the [Development Guide](DEVELOPMENT_GUIDE.md) to build from source and run the test suite.
+See the [Development Guide](DEVELOPMENT_GUIDE.md) to build from source and run the test suite.

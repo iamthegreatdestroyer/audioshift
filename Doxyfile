@@ -1,44 +1,42 @@
-# AudioShift — Doxygen Configuration
-# Generated for Track 4: Documentation & Community
+#AudioShift — Doxygen Configuration
+#Generated for Track 4 : Documentation& Community
 #
-# Run: doxygen Doxyfile
-# Output: docs/generated/html/
+#Run : doxygen Doxyfile
+#Output : docs / generated / html /
 
-#---------------------------------------------------------------------------
-# Project metadata
-#---------------------------------------------------------------------------
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#Project metadata
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
-PROJECT_NAME           = "AudioShift"
-PROJECT_BRIEF          = "System-wide 432 Hz real-time pitch-shifting for Android — Magisk module & Custom ROM"
-PROJECT_VERSION        = "1.0"
-PROJECT_LOGO           =
+PROJECT_NAME = "AudioShift" PROJECT_BRIEF =
+        "System-wide 432 Hz real-time pitch-shifting for Android — Magisk module & Custom "
+        "ROM" PROJECT_VERSION = "1.0" PROJECT_LOGO =
 
-#---------------------------------------------------------------------------
-# Input / output
-#---------------------------------------------------------------------------
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#Input / output
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
-INPUT                  = path_c_magisk/native \
-                         shared/dsp/include \
-                         shared/audio_testing/src
+                INPUT = path_c_magisk / native shared / dsp / include shared / audio_testing /
+                        src
 
-OUTPUT_DIRECTORY       = docs/generated
+                                OUTPUT_DIRECTORY =
+                                docs / generated
 
-RECURSIVE              = YES
+                                               RECURSIVE = YES
 
-# Patterns to include
-FILE_PATTERNS          = *.cpp \
-                         *.h \
-                         *.c \
-                         *.cc \
-                         *.hpp \
-                         *.md
+#Patterns to include
+                                        FILE_PATTERNS = *.cpp*.h*.c*.cc*.hpp*.md
 
-# Patterns to exclude — build artefacts and third-party code
-EXCLUDE_PATTERNS       = */build/* \
-                         */third_party/* \
-                         */build_host/* \
-                         */.git/* \
-                         */tests/*
+#Patterns to exclude — build artefacts and third - party code
+                                                                 EXCLUDE_PATTERNS =
+                                                */ build                        /* \
+                                                                                 */
+                                                           third_party          /* \
+                                                                                 */
+                                                                   build_host   /* \
+                                                                                 */
+                                                                           .git /* \
+                                                                                 */ tests/*
 
 # Use docs/index.md as the Doxygen main page
 USE_MDFILE_AS_MAINPAGE = docs/index.md

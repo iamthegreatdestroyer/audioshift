@@ -48,23 +48,23 @@ source files.
 
 ## 📋 Requirements
 
-| Requirement | Detail |
-|-------------|--------|
-| Root | Magisk v26 or later |
-| Android | 12 (API 31) minimum; tested on Android 15 |
-| Architecture | ARM64 (`arm64-v8a`) |
-| Storage | ~4 MB |
+| Requirement  | Detail                                    |
+| ------------ | ----------------------------------------- |
+| Root         | Magisk v26 or later                       |
+| Android      | 12 (API 31) minimum; tested on Android 15 |
+| Architecture | ARM64 (`arm64-v8a`)                       |
+| Storage      | ~4 MB                                     |
 
 ---
 
 ## 📱 Tested Devices
 
-| Device | Android | ROM | Result |
-|--------|---------|-----|--------|
+| Device                         | Android               | ROM   | Result  |
+| ------------------------------ | --------------------- | ----- | ------- |
 | Samsung Galaxy S25+ (SM-S926B) | Android 15 / One UI 7 | Stock | ✅ Pass |
-| ⬛ [Add your device] | ⬛ | ⬛ | ⬛ |
+| ⬛ [Add your device]           | ⬛                    | ⬛    | ⬛      |
 
-*Please report your device in the thread so we can expand this table.*
+_Please report your device in the thread so we can expand this table._
 
 ---
 
@@ -72,23 +72,24 @@ source files.
 
 <!-- Upload to Imgur and paste direct .png/.jpg URLs below -->
 
-| Before | After |
-|--------|-------|
+| Before              | After              |
+| ------------------- | ------------------ |
 | [screenshot_before] | [screenshot_after] |
 
-*Spectrum analyser screenshot showing 440 Hz reference tone shifted to 432 Hz.*
+_Spectrum analyser screenshot showing 440 Hz reference tone shifted to 432 Hz._
 
 ---
 
 ## 📦 Downloads
 
-| File | Version | Date | SHA-256 |
-|------|---------|------|---------|
+| File                           | Version    | Date   | SHA-256    |
+| ------------------------------ | ---------- | ------ | ---------- |
 | `audioshift432-v[VERSION].zip` | v[VERSION] | [DATE] | `[SHA256]` |
 
 **[⬛ DOWNLOAD LINK — attach file or paste MediaFire/Mega link here]**
 
 Verify the hash before flashing:
+
 ```bash
 sha256sum audioshift432-v[VERSION].zip
 ```
@@ -122,20 +123,21 @@ sha256sum audioshift432-v[VERSION].zip
 ## 📝 Changelog
 
 ### v[VERSION] — [DATE]
+
 - ⬛ [Initial release / changes]
 
-*Full changelog:* [CHANGELOG.md on GitHub](https://github.com/iamthegreatdestroyer/audioshift/blob/main/CHANGELOG.md)
+_Full changelog:_ [CHANGELOG.md on GitHub](https://github.com/iamthegreatdestroyer/audioshift/blob/main/CHANGELOG.md)
 
 ---
 
 ## 🔗 Links
 
-| Resource | URL |
-|----------|-----|
-| GitHub (source) | https://github.com/iamthegreatdestroyer/audioshift |
-| Documentation | https://iamthegreatdestroyer.github.io/audioshift |
-| Issues / bug reports | https://github.com/iamthegreatdestroyer/audioshift/issues |
-| CHANGELOG | https://github.com/iamthegreatdestroyer/audioshift/blob/main/CHANGELOG.md |
+| Resource             | URL                                                                       |
+| -------------------- | ------------------------------------------------------------------------- |
+| GitHub (source)      | https://github.com/iamthegreatdestroyer/audioshift                        |
+| Documentation        | https://iamthegreatdestroyer.github.io/audioshift                         |
+| Issues / bug reports | https://github.com/iamthegreatdestroyer/audioshift/issues                 |
+| CHANGELOG            | https://github.com/iamthegreatdestroyer/audioshift/blob/main/CHANGELOG.md |
 
 ---
 
@@ -159,5 +161,5 @@ sha256sum audioshift432-v[VERSION].zip
 
 ---
 
-*AudioShift is open-source software released under the MIT License.*
-*See [LICENSE](https://github.com/iamthegreatdestroyer/audioshift/blob/main/LICENSE) for details.*
+_AudioShift is open-source software released under the MIT License._
+_See [LICENSE](https://github.com/iamthegreatdestroyer/audioshift/blob/main/LICENSE) for details._

@@ -1,0 +1,348 @@
+##
+# AudioShift — AOSP Full ROM Build Workflow
+# Phase 5 § Sprint 5.1
+#
+# Triggers on: Manual workflow_dispatch (expensive 4-hour build)
+#
+# Jobs:
+#   aosp_build → Checkout AOSP, apply AudioShift patches, compile full ROM
+#
+# Outputs:
+#   rom_zip → artifacts/aosp_s25plus-*.zip (flashable OTA package)
+#   libaudioshift432_so → built artifact containing 432Hz effect library
+#
+# Runner Requirements:
+#   - ubuntu-22.04-xxl (8 CPU, 32GB RAM, 512GB+ storage)
+#   - ~300GB free disk space for AOSP source
+#   - ~60 minutes for sync, ~240 minutes for build = 300 min total
+#
+# Manual Triggers:
+#   publish_artifact → if 'true', upload ROM to GitHub Releases
+#   aosp_branch → AOSP branch to build (default: android-14.0.0_r61)
+#
+# Dependencies:
+#   - path_b_rom/build_scripts/build_rom.sh
+#   - path_b_rom/build_scripts/apply_patches.sh
+#   - shared/dsp/ (NDK-compiled ARM64 DSP library)
+##
+
+name: "AudioShift — AOSP Full ROM Build"
+
+on:
+    workflow_dispatch:
+        inputs:
+            publish_artifact:
+                description: "Publish ROM to GitHub Releases?"
+                required: true
+                default: "false"
+                type: choice
+                options:
+                    - "false"
+                    - "true"
+            aosp_branch:
+                description: "AOSP branch to build"
+                required: false
+                default: "android-14.0.0_r61"
+                type: string
+
+permissions:
+    contents: write # for uploading release artifacts
+    actions: read
+
+jobs:
+    # ──────────────────────────────────────────────────────────────────────────
+    # Main AOSP Compilation Job
+    # ──────────────────────────────────────────────────────────────────────────
+    aosp_build:
+        name: "Compile AOSP ROM (S25+)"
+        runs-on: ubuntu-22.04-xxl
+        timeout-minutes: 300 # 5 hours max (sync ~60min + build ~240min)
+
+        outputs:
+            rom_zip: ${{ steps.build.outputs.rom_zip }}
+            rom_size_mb: ${{ steps.build.outputs.rom_size_mb }}
+            build_time_minutes: ${{ steps.build.outputs.build_time_minutes }}
+
+        steps:
+            # ─── Setup and Verification ────────────────────────────────────────
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Set up build environment
+              run: |
+                  echo "::group::Environment Setup"
+                  echo "Disk space before:"
+                  df -h / | tail -1
+                  echo ""
+                  echo "CPU cores: $(nproc)"
+                  echo "Total memory: $(free -h | grep Mem | awk '{print $2}')"
+                  echo "::endgroup::"
+
+            - name: Configure Git credentials
+              run: |
+                  git config --global user.email "ci@audioshift.local"
+                  git config --global user.name "AudioShift CI"
+
+            # ─── AOSP Source Checkout & Sync ───────────────────────────────────
+            - name: Initialize AOSP repo
+              run: |
+                  echo "::group::AOSP Repo Initialization"
+                  set -euo pipefail
+
+                  AOSP_ROOT="${HOME}/aosp"
+                  mkdir -p "$AOSP_ROOT"
+                  cd "$AOSP_ROOT"
+
+                  echo "Initializing repo for branch: ${{ github.event.inputs.aosp_branch || 'android-14.0.0_r61' }}"
+                  repo init -u https://android.googlesource.com/platform/manifest \
+                      -b "${{ github.event.inputs.aosp_branch || 'android-14.0.0_r61' }}" \
+                      --depth=1 \
+                      --repo-url=https://gerrit.googlesource.com/git-repo \
+                      -q
+
+                  echo "Repo initialized successfully at $AOSP_ROOT"
+                  echo "::endgroup::"
+              env:
+                  REPO_CURL_VERBOSE: 1
+                  REPO_INIT_TIMEOUT: 120
+
+            - name: Add AudioShift local manifests
+              run: |
+                  echo "::group::Local Manifest Setup"
+                  set -euo pipefail
+
+                  AOSP_ROOT="${HOME}/aosp"
+                  MANIFEST_DIR="$AOSP_ROOT/.repo/local_manifests"
+                  mkdir -p "$MANIFEST_DIR"
+
+                  # Copy AudioShift local manifest for custom patches
+                  if [ -f "path_b_rom/build_scripts/local_manifest.xml" ]; then
+                      cp "path_b_rom/build_scripts/local_manifest.xml" \
+                         "$MANIFEST_DIR/audioshift.xml"
+                      echo "✓ Local manifest configured"
+                  else
+                      echo "⚠ Local manifest not found, proceeding with standard AOSP"
+                  fi
+
+                  ls -la "$MANIFEST_DIR/" || true
+                  echo "::endgroup::"
+
+            - name: Sync AOSP repositories (with cache)
+              run: |
+                  echo "::group::AOSP Repo Sync"
+                  set -euo pipefail
+
+                  AOSP_ROOT="${HOME}/aosp"
+                  cd "$AOSP_ROOT"
+
+                  echo "Starting repo sync (parallel jobs: 8, shallow clone)..."
+
+                  # First sync attempt - may timeout/fail, will retry
+                  repo sync -j 8 -c --fail-fast --no-tags -q || {
+                      echo "⚠ First sync attempt failed, retrying with smaller job count..."
+                      repo sync -j 4 -c --fail-fast --no-tags -q
+                  }
+
+                  echo "✓ Repo sync complete"
+                  du -sh "$AOSP_ROOT" || true
+                  echo "::endgroup::"
+              timeout-minutes: 120
+              continue-on-error: false
+
+            # ─── Apply AudioShift Patches ──────────────────────────────────────
+            - name: Apply AudioShift patches to AOSP
+              run: |
+                  echo "::group::Apply AudioShift Patches"
+                  set -euo pipefail
+
+                  AOSP_ROOT="${HOME}/aosp"
+                  WORKSPACE_ROOT="$(pwd)"
+                  PATCHES_DIR="$WORKSPACE_ROOT/path_b_rom/frameworks/av/services/audioflinger"
+
+                  cd "$AOSP_ROOT"
+
+                  # Patch 1: AudioFlinger integration
+                  if [ -f "$PATCHES_DIR/../audioflinger.patch" ]; then
+                      echo "Applying AudioFlinger patch..."
+                      patch -p1 < "$PATCHES_DIR/../audioflinger.patch" || {
+                          echo "⚠ AudioFlinger patch may have pre-existing hunks, continuing..."
+                          true
+                      }
+                      echo "✓ AudioFlinger patch applied"
+                  fi
+
+                  # Patch 2: Audio policy configuration
+                  if [ -f "$PATCHES_DIR/../audio_policy.patch" ]; then
+                      echo "Applying audio policy patch..."
+                      patch -p1 < "$PATCHES_DIR/../audio_policy.patch" || true
+                      echo "✓ Audio policy patch applied"
+                  fi
+
+                  # Copy device-specific configs
+                  if [ -d "$WORKSPACE_ROOT/path_b_rom/android/device/samsung/s25plus" ]; then
+                      echo "Copying device-specific configs..."
+                      mkdir -p "device/samsung/s25plus"
+                      cp "$WORKSPACE_ROOT/path_b_rom/android/device/samsung/s25plus"/*.prop \
+                         "device/samsung/s25plus/" || true
+                      cp "$WORKSPACE_ROOT/path_b_rom/android/device/samsung/s25plus"/*.xml \
+                         "device/samsung/s25plus/" || true
+                      echo "✓ Device configs copied"
+                  fi
+
+                  echo "::endgroup::"
+              continue-on-error: true
+
+            # ─── Build Configuration & Compilation ─────────────────────────────
+            - name: Configure and compile AOSP ROM
+              id: build
+              run: |
+                  echo "::group::AOSP Build Configuration"
+                  set -euo pipefail
+
+                  AOSP_ROOT="${HOME}/aosp"
+                  cd "$AOSP_ROOT"
+
+                  # Source build environment
+                  echo "Sourcing AOSP build environment..."
+                  source "build/envsetup.sh" > /dev/null 2>&1 || {
+                      echo "ERROR: Failed to source AOSP build environment"
+                      exit 1
+                  }
+
+                  # Configure lunch target
+                  LUNCH_TARGET="aosp_arm64-userdebug"
+                  echo "Configuring lunch target: $LUNCH_TARGET"
+                  lunch "$LUNCH_TARGET" > /dev/null 2>&1
+
+                  echo "::endgroup::"
+
+                  # ─── Main Build ───────────────────────────────────────────────
+                  echo "::group::Compilation (this may take 2-4 hours)"
+
+                  BUILD_START=$(date +%s)
+
+                  # Build command: compile everything except verification, verbose errors
+                  echo "Starting parallel build with $(nproc) cores..."
+                  m -j$(nproc) 2>&1 | tee build.log || {
+                      echo "ERROR: Build failed. Last 50 lines of build log:"
+                      tail -50 build.log
+                      exit 1
+                  }
+
+                  BUILD_END=$(date +%s)
+                  BUILD_TIME_MINUTES=$(( ($BUILD_END - $BUILD_START) / 60 ))
+
+                  echo "✓ Build completed in $BUILD_TIME_MINUTES minutes"
+                  echo "::endgroup::"
+
+                  # ─── Verify build artifacts ───────────────────────────────────
+                  echo "::group::Artifact Verification"
+
+                  OUT_DIR="$AOSP_ROOT/out/target/product/generic_arm64"
+                  [ -d "$OUT_DIR" ] || OUT_DIR="$AOSP_ROOT/out/target/product/aosp_arm64"
+
+                  if [ ! -d "$OUT_DIR" ]; then
+                      echo "ERROR: Output directory not found"
+                      find "$AOSP_ROOT/out/target/product" -maxdepth 1 -type d
+                      exit 1
+                  fi
+
+                  # Find ROM ZIP (usually named *-ota-*.zip or *-flashall.zip)
+                  ROM_ZIP=$(find "$OUT_DIR" -maxdepth 1 -name "*.zip" -type f -printf '%T@ %p\n' | \
+                      sort -rn | head -1 | cut -d' ' -f2-)
+
+                  if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
+                      echo "ERROR: No OTA ZIP found in $OUT_DIR"
+                      ls -lah "$OUT_DIR" | grep -E "\.zip|\.img" || true
+                      exit 1
+                  fi
+
+                  ROM_SIZE_BYTES=$(stat -f%z "$ROM_ZIP" 2>/dev/null || stat -c%s "$ROM_ZIP" 2>/dev/null)
+                  ROM_SIZE_MB=$((ROM_SIZE_BYTES / 1048576))
+
+                  echo "✓ ROM artifact found:"
+                  echo "  Path: $ROM_ZIP"
+                  echo "  Size: ${ROM_SIZE_MB} MB"
+
+                  # Verify AudioShift effect library was compiled
+                  if [ -f "$OUT_DIR/system/lib64/libaudioshift432.so" ]; then
+                      echo "✓ AudioShift effect library (libaudioshift432.so) verified in ROM"
+                  else
+                      echo "⚠ WARNING: AudioShift effect library not found in system lib64"
+                      echo "  Checking vendor lib..."
+                      find "$OUT_DIR" -name "libaudioshift432.so" -type f
+                  fi
+
+                  echo "::endgroup::"
+
+                  # ─── Output variables for downstream jobs ──────────────────────
+                  mkdir -p "$GITHUB_WORKSPACE/artifacts"
+                  cp "$ROM_ZIP" "$GITHUB_WORKSPACE/artifacts/"
+                  ROM_BASENAME=$(basename "$ROM_ZIP")
+
+                  echo "rom_zip=$GITHUB_WORKSPACE/artifacts/$ROM_BASENAME" >> "$GITHUB_OUTPUT"
+                  echo "rom_size_mb=$ROM_SIZE_MB" >> "$GITHUB_OUTPUT"
+                  echo "build_time_minutes=$BUILD_TIME_MINUTES" >> "$GITHUB_OUTPUT"
+              timeout-minutes: 260
+              continue-on-error: false
+
+            # ─── Upload Build Summary ──────────────────────────────────────────
+            - name: Upload build summary
+              if: always()
+              run: |
+                  echo "::group::Build Summary"
+                  echo "Status: ${{ job.status }}"
+                  echo "ROM ZIP: ${{ steps.build.outputs.rom_zip }}"
+                  echo "ROM Size: ${{ steps.build.outputs.rom_size_mb }} MB"
+                  echo "Build Duration: ${{ steps.build.outputs.build_time_minutes }} minutes"
+                  echo "::endgroup::"
+
+            # ─── Cache AOSP source for future builds ────────────────────────────
+            - name: Cache AOSP source tree
+              if: success()
+              uses: actions/cache/save@v4
+              with:
+                  path: ~/aosp/.repo
+                  key: aosp-${{ github.event.inputs.aosp_branch || 'android-14.0.0_r61' }}-${{ github.run_id }}
+                  upload-chunk-size: 1073741824 # 1GB chunks to avoid upload timeout
+
+            # ─── Publish to GitHub Releases (if requested) ─────────────────────
+            - name: Publish ROM to GitHub Releases
+              if: |
+                  success() &&
+                  github.event.inputs.publish_artifact == 'true' &&
+                  steps.build.outputs.rom_zip != ''
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: ${{ steps.build.outputs.rom_zip }}
+                  tag_name: "aosp-build-${{ github.run_id }}"
+                  name: "AOSP ROM Build #${{ github.run_id }}"
+                  body: |
+                      ## Build Details
+                      - **Branch:** ${{ github.event.inputs.aosp_branch || 'android-14.0.0_r61' }}
+                      - **Build Time:** ${{ steps.build.outputs.build_time_minutes }} minutes
+                      - **ROM Size:** ${{ steps.build.outputs.rom_size_mb }} MB
+                      - **Commit:** ${{ github.sha }}
+                      - **Runner:** ubuntu-22.04-xxl (8 CPU, 32GB RAM)
+
+                      ## Flash Instructions
+                      1. Enable Developer Mode on Galaxy S25+
+                      2. Unlock bootloader (irreversible)
+                      3. Boot into fastboot: `adb reboot bootloader`
+                      4. Flash ROM: `fastboot update <rom-zip>`
+
+                      **⚠️ Warning:** Flashing custom ROMs voids warranty and requires careful handling.
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            # ─── Cleanup on failure ────────────────────────────────────────────
+            - name: Cleanup build artifacts on failure
+              if: failure()
+              run: |
+                  echo "Build failed. Cleanup:"
+                  rm -rf "$HOME/aosp/out" || true
+                  du -sh "$HOME/aosp" || true

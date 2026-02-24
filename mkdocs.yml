@@ -12,7 +12,6 @@ site_description: >-
   System-wide 432 Hz pitch-shifting for Android —
   Magisk module & Custom ROM implementation guide.
 site_url: https://iamthegreatdestroyer.github.io/audioshift
-
 repo_url: https://github.com/iamthegreatdestroyer/audioshift
 repo_name: iamthegreatdestroyer/audioshift
 

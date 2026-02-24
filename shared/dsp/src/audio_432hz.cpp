@@ -1,15 +1,20 @@
 #include "audio_432hz.h"
+
 #include <SoundTouch.h>
-#include <vector>
-#include <cmath>
+
 #include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <vector>
 
-namespace audioshift {
-namespace dsp {
+namespace audioshift
+{
+namespace dsp
+{
 
 // Pimpl implementation using SoundTouch
-class Audio432HzConverter::Impl {
+class Audio432HzConverter::Impl
+{
 public:
     soundtouch::SoundTouch soundTouch;
     int sampleRate;
@@ -22,7 +27,8 @@ public:
     // Pitch shift value: 432/440 = 0.98182 = -31.77 cents ≈ -0.5296 semitones
     static constexpr float PITCH_SEMITONES = -0.5296f;
 
-    Impl(int sr, int ch) : sampleRate(sr), channels(ch) {
+    Impl(int sr, int ch) : sampleRate(sr), channels(ch)
+    {
         soundTouch.setSampleRate(sr);
         soundTouch.setChannels(ch);
         soundTouch.setPitchSemiTones(PITCH_SEMITONES);
@@ -38,13 +44,16 @@ public:
 };
 
 Audio432HzConverter::Audio432HzConverter(int sampleRate, int channels)
-    : pImpl_(std::make_unique<Impl>(sampleRate, channels)) {
+    : pImpl_(std::make_unique<Impl>(sampleRate, channels))
+{
 }
 
 Audio432HzConverter::~Audio432HzConverter() = default;
 
-int Audio432HzConverter::process(int16_t* buffer, int numSamples) {
-    if (!buffer || numSamples <= 0 || !pImpl_) {
+int Audio432HzConverter::process(int16_t* buffer, int numSamples)
+{
+    if (!buffer || numSamples <= 0 || !pImpl_)
+    {
         return 0;
     }
 
@@ -52,13 +61,15 @@ int Audio432HzConverter::process(int16_t* buffer, int numSamples) {
 
     // Resize staging buffers to avoid repeated allocations
     uint32_t totalSamples = numSamples;
-    if (pImpl_->floatIn.size() < totalSamples) {
+    if (pImpl_->floatIn.size() < totalSamples)
+    {
         pImpl_->floatIn.resize(totalSamples);
         pImpl_->floatOut.resize(totalSamples * 2);  // extra headroom for output
     }
 
     // Convert int16 to float
-    for (int i = 0; i < numSamples; i++) {
+    for (int i = 0; i < numSamples; i++)
+    {
         pImpl_->floatIn[i] = buffer[i] / 32768.0f;
     }
 
@@ -67,20 +78,21 @@ int Audio432HzConverter::process(int16_t* buffer, int numSamples) {
 
     // Receive processed samples
     uint32_t received = pImpl_->soundTouch.receiveSamples(
-        pImpl_->floatOut.data(),
-        std::min((uint32_t)pImpl_->floatOut.size(), (uint32_t)(numSamples * 2))
-    );
+            pImpl_->floatOut.data(),
+            std::min((uint32_t)pImpl_->floatOut.size(), (uint32_t)(numSamples * 2)));
 
     // Convert back to int16, handle silence for startup latency
     uint32_t outputSamples = std::min(received, (uint32_t)numSamples);
-    for (uint32_t i = 0; i < outputSamples; i++) {
+    for (uint32_t i = 0; i < outputSamples; i++)
+    {
         float sample = pImpl_->floatOut[i] * 32767.0f;
         sample = std::max(-32768.0f, std::min(32767.0f, sample));
         buffer[i] = (int16_t)sample;
     }
 
     // Zero-fill remainder if fewer samples returned (startup latency)
-    for (uint32_t i = outputSamples; i < numSamples; i++) {
+    for (uint32_t i = outputSamples; i < numSamples; i++)
+    {
         buffer[i] = 0;
     }
 
@@ -93,28 +105,34 @@ int Audio432HzConverter::process(int16_t* buffer, int numSamples) {
     return numSamples;
 }
 
-void Audio432HzConverter::setSampleRate(int sampleRate) {
-    if (pImpl_) {
+void Audio432HzConverter::setSampleRate(int sampleRate)
+{
+    if (pImpl_)
+    {
         pImpl_->sampleRate = sampleRate;
         pImpl_->soundTouch.setSampleRate(sampleRate);
         pImpl_->soundTouch.clear();
     }
 }
 
-void Audio432HzConverter::setPitchShiftSemitones(float semitones) {
-    if (pImpl_) {
+void Audio432HzConverter::setPitchShiftSemitones(float semitones)
+{
+    if (pImpl_)
+    {
         pImpl_->soundTouch.setPitchSemiTones(semitones);
     }
 }
 
-float Audio432HzConverter::getLatencyMs() const {
+float Audio432HzConverter::getLatencyMs() const
+{
     if (!pImpl_) return 0.0f;
     // Latency = (sequenceMs/2 + seekwindowMs + overlapMs) * sample rate independent estimate
     // Approximate: 40ms/2 + 15ms + 8ms ≈ 35ms + network buffering
     return 35.0f;
 }
 
-float Audio432HzConverter::getCpuUsagePercent() const {
+float Audio432HzConverter::getCpuUsagePercent() const
+{
     if (!pImpl_) return 0.0f;
     return pImpl_->cpuUsage.load(std::memory_order_relaxed);
 }

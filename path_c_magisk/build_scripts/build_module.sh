@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AudioShift PATH-C — Magisk Module Build Script
 #
-# Builds libaudioshift_effect.so with the Android NDK, then packages
+# Builds libaudioshift_hook.so with the Android NDK, then packages
 # the complete Magisk module as a flashable ZIP.
 #
 # Usage:
@@ -34,7 +34,7 @@ OUTPUT_ZIP="$DIST_DIR/${MODULE_ID}-v${MODULE_VERSION}.zip"
 # Defaults
 BUILD_TYPE="Release"
 ABI="arm64-v8a"
-ANDROID_PLATFORM="android-28"
+ANDROID_PLATFORM="android-34"
 DEPLOY=false
 
 # NDK detection order: env var → common paths
@@ -101,17 +101,17 @@ cmake \
     -DCMAKE_INSTALL_PREFIX="$MODULE_DIR" \
     2>&1
 
-info "Compiling libaudioshift_effect.so..."
+info "Compiling libaudioshift_hook.so..."
 cmake --build "$BUILD_DIR" --config "$BUILD_TYPE" --parallel "$(nproc 2>/dev/null || echo 4)"
 
 info "Installing .so into module directory..."
 cmake --install "$BUILD_DIR" --config "$BUILD_TYPE"
 
-SO_PATH="$MODULE_DIR/system/lib64/soundfx/libaudioshift_effect.so"
+SO_PATH="$MODULE_DIR/system/lib64/soundfx/libaudioshift_hook.so"
 [ -f "$SO_PATH" ] || error ".so not found after install: $SO_PATH"
 
 SO_SIZE=$(du -h "$SO_PATH" | cut -f1)
-ok "libaudioshift_effect.so built: $SO_SIZE"
+ok "libaudioshift_hook.so built: $SO_SIZE"
 
 # ─── Step 2: Verify exported symbols ─────────────────────────────────────────
 
@@ -172,7 +172,7 @@ ok "Module ZIP: $OUTPUT_ZIP ($ZIP_SIZE)"
 info "Verifying ZIP contents..."
 REQUIRED_ENTRIES=(
     "module.prop"
-    "system/lib64/soundfx/libaudioshift_effect.so"
+    "system/lib64/soundfx/libaudioshift_hook.so"
     "system/vendor/etc/audio_effects_audioshift.xml"
     "META-INF/com/google/android/update-binary"
     "META-INF/com/google/android/updater-script"

@@ -301,13 +301,13 @@ else
 fi
 
 # T4.1 .so present in soundfx overlay
-SO_PATH_SYSTEM="$(adb_out "su -c 'ls /system/lib64/soundfx/libaudioshift_effect.so 2>/dev/null'")"
-SO_PATH_VENDOR="$(adb_out "su -c 'ls /vendor/lib64/soundfx/libaudioshift_effect.so 2>/dev/null'")"
+SO_PATH_SYSTEM="$(adb_out "su -c 'ls /system/lib64/soundfx/libaudioshift_hook.so 2>/dev/null'")"
+SO_PATH_VENDOR="$(adb_out "su -c 'ls /vendor/lib64/soundfx/libaudioshift_hook.so 2>/dev/null'")"
 
 if [[ -n "$SO_PATH_SYSTEM" || -n "$SO_PATH_VENDOR" ]]; then
-    pass "T4.1  libaudioshift_effect.so present in soundfx directory"
+    pass "T4.1  libaudioshift_hook.so present in soundfx directory"
 else
-    fail "T4.1  libaudioshift_effect.so not found in /system/lib64/soundfx/ or /vendor/lib64/soundfx/"
+    fail "T4.1  libaudioshift_hook.so not found in /system/lib64/soundfx/ or /vendor/lib64/soundfx/"
 fi
 
 # T4.2 System properties set
@@ -401,10 +401,10 @@ step "T6: Processing Latency"
 
 LATENCY_PROP=$(adb_out getprop persist.audioshift.latency_ms || echo "")
 if [[ -n "$LATENCY_PROP" ]]; then
-    if python3 -c "import sys; sys.exit(0 if float('$LATENCY_PROP') < 20 else 1)" 2>/dev/null; then
-        pass "T6.1  Reported latency: ${LATENCY_PROP} ms (< 20 ms target)"
+    if python3 -c "import sys; sys.exit(0 if float('$LATENCY_PROP') < 10 else 1)" 2>/dev/null; then
+        pass "T6.1  Reported latency: ${LATENCY_PROP} ms (< 10 ms target)"
     else
-        fail "T6.1  Reported latency: ${LATENCY_PROP} ms (exceeds 20 ms target)"
+        fail "T6.1  Reported latency: ${LATENCY_PROP} ms (exceeds 10 ms target)"
     fi
 else
     warn "T6.1  persist.audioshift.latency_ms not set (effect may not have processed audio yet)"

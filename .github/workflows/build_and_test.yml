@@ -269,12 +269,39 @@ jobs:
           retention-days: 7
 
   # ══════════════════════════════════════════════════════════════════════════
-  # JOB 5: Build Summary
+  # JOB 5: Regression Gate (host latency bench — no device needed)
+  # ══════════════════════════════════════════════════════════════════════════
+  regression_gate:
+    name: "Regression Gate"
+    runs-on: ubuntu-22.04
+    needs: [host_unit_tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get install -y cmake ninja-build
+
+      - name: Configure bench_latency
+        run: |
+          cmake -B tests/performance/build \
+            -S tests/performance \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build bench_latency
+        run: cmake --build tests/performance/build --parallel $(nproc)
+
+      - name: Run latency regression (< 10 ms gate)
+        run: ./tests/performance/build/bench_latency
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 6: Build Summary
   # ══════════════════════════════════════════════════════════════════════════
   build_summary:
     name: "Build Summary"
     runs-on: ubuntu-22.04
-    needs: [host_unit_tests, python_tests, clang_format]
+    needs: [host_unit_tests, python_tests, clang_format, ndk_cross_compile, regression_gate]
     if: always()
 
     steps:
@@ -287,10 +314,14 @@ jobs:
           echo "| Host Unit Tests  | ${{ needs.host_unit_tests.result  }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Python FFT Tests | ${{ needs.python_tests.result     }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Clang-Format     | ${{ needs.clang_format.result     }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NDK Cross-Compile| ${{ needs.ndk_cross_compile.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Regression Gate  | ${{ needs.regression_gate.result  }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if any required job failed
         if: |
-          needs.host_unit_tests.result == 'failure' ||
-          needs.python_tests.result    == 'failure' ||
-          needs.clang_format.result    == 'failure'
+          needs.host_unit_tests.result   == 'failure' ||
+          needs.python_tests.result      == 'failure' ||
+          needs.clang_format.result      == 'failure' ||
+          needs.ndk_cross_compile.result == 'failure' ||
+          needs.regression_gate.result   == 'failure'
         run: exit 1

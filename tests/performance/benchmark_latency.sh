@@ -30,7 +30,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 CSV_OUT=""
 SAMPLES=10
 COMPARE_MODE=false
-TARGET_MS=20          # Maximum acceptable added latency
+TARGET_MS=10          # Maximum acceptable added latency (< 10 ms requirement)
 WARMUP_SAMPLES=3      # Discard initial startup transients
 
 RED='\033[1;31m'; GREEN='\033[1;32m'; YELLOW='\033[1;33m'

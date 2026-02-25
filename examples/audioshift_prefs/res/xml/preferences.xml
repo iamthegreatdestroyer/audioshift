@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+AudioShift Preferences Definition
+Phase 6 § Sprint 6.2
+
+Defines the user interface hierarchy for AudioShift settings:
+- Enable/disable toggle
+- Pitch adjustment slider
+- WSOLA parameter controls
+- Performance monitoring readouts
+- Help and troubleshooting
+
+PreferenceScreen: Root container for all preferences
+PreferenceCategory: Grouped sections
+SwitchPreference: Boolean toggle
+SeekBarPreference: Slider for numerical values
+EditTextPreference: Text input
+Preference: Read-only information display
+-->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/app_name">
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        General Settings
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_general"
+        android:title="@string/pref_category_general">
+
+        <!-- Enable/Disable Toggle -->
+        <SwitchPreference
+            android:key="audioshift.enabled"
+            android:title="@string/pref_enabled_title"
+            android:summary="@string/pref_enabled_summary"
+            android:defaultValue="true"
+            android:persistent="true" />
+
+    </PreferenceCategory>
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        Pitch Adjustment
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_pitch"
+        android:title="@string/pref_category_pitch">
+
+        <!-- Pitch Shift Slider: -100 to +100 cents -->
+        <!-- Default: -31.77 cents for 432 Hz conversion -->
+        <SeekBarPreference
+            android:key="audioshift.pitch_cents"
+            android:title="@string/pref_pitch_title"
+            android:summary="@string/pref_pitch_summary"
+            android:defaultValue="-32"
+            android:min="-100"
+            android:max="100"
+            android:persistent="true" />
+
+        <!-- Display current pitch in Hz (read-only) -->
+        <Preference
+            android:key="audioshift.frequency_display"
+            android:title="@string/pref_frequency_title"
+            android:summary="@string/pref_frequency_summary"
+            android:persistent="false"
+            android:selectable="false"
+            android:enabled="false" />
+
+    </PreferenceCategory>
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        WSOLA Advanced Parameters
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_wsola"
+        android:title="@string/pref_category_wsola">
+
+        <!-- WSOLA Sequence Length: 20-80ms -->
+        <SeekBarPreference
+            android:key="audioshift.wsola.sequence_ms"
+            android:title="@string/pref_wsola_sequence_title"
+            android:summary="@string/pref_wsola_sequence_summary"
+            android:defaultValue="40"
+            android:min="20"
+            android:max="80"
+            android:persistent="true" />
+
+        <!-- WSOLA Seek Window: 5-30ms -->
+        <SeekBarPreference
+            android:key="audioshift.wsola.seekwindow_ms"
+            android:title="@string/pref_wsola_seekwindow_title"
+            android:summary="@string/pref_wsola_seekwindow_summary"
+            android:defaultValue="15"
+            android:min="5"
+            android:max="30"
+            android:persistent="true" />
+
+        <!-- WSOLA Overlap: 2-20ms -->
+        <SeekBarPreference
+            android:key="audioshift.wsola.overlap_ms"
+            android:title="@string/pref_wsola_overlap_title"
+            android:summary="@string/pref_wsola_overlap_summary"
+            android:defaultValue="8"
+            android:min="2"
+            android:max="20"
+            android:persistent="true" />
+
+    </PreferenceCategory>
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        Performance Monitoring
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_performance"
+        android:title="@string/pref_category_performance">
+
+        <!-- Live Latency Reading (read-only) -->
+        <Preference
+            android:key="audioshift.latency_ms"
+            android:title="@string/pref_latency_title"
+            android:summary="@string/pref_latency_summary"
+            android:persistent="false"
+            android:selectable="false"
+            android:enabled="false" />
+
+        <!-- CPU Usage Gauge (read-only) -->
+        <Preference
+            android:key="audioshift.cpu_percent"
+            android:title="@string/pref_cpu_title"
+            android:summary="@string/pref_cpu_summary"
+            android:persistent="false"
+            android:selectable="false"
+            android:enabled="false" />
+
+        <!-- Output Frequency Display (read-only) -->
+        <Preference
+            android:key="audioshift.output_frequency"
+            android:title="@string/pref_frequency_title"
+            android:summary="Detected output frequency (should be ~432 Hz)"
+            android:persistent="false"
+            android:selectable="false"
+            android:enabled="false" />
+
+    </PreferenceCategory>
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        Audio Device Info
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_device"
+        android:title="@string/pref_category_device">
+
+        <!-- Active Audio Device (read-only) -->
+        <Preference
+            android:key="audioshift.active_device"
+            android:title="@string/pref_device_title"
+            android:summary="@string/pref_device_summary"
+            android:persistent="false"
+            android:selectable="false"
+            android:enabled="false" />
+
+    </PreferenceCategory>
+
+    <!-- ──────────────────────────────────────────────────────────────────────
+        Help & Support
+        ────────────────────────────────────────────────────────────────────── -->
+    <PreferenceCategory
+        android:key="pref_category_help"
+        android:title="@string/pref_category_help">
+
+        <!-- Verification Check -->
+        <Preference
+            android:key="audioshift.verify_installation"
+            android:title="@string/pref_verify_title"
+            android:summary="@string/pref_verify_summary"
+            android:persistent="false"
+            android:selectable="true" />
+
+        <!-- Help & FAQ -->
+        <Preference
+            android:key="audioshift.help"
+            android:title="@string/pref_help_title"
+            android:summary="@string/pref_help_summary"
+            android:persistent="false"
+            android:selectable="true" />
+
+        <!-- About -->
+        <Preference
+            android:key="audioshift.about"
+            android:title="@string/pref_about_title"
+            android:summary="@string/pref_about_summary"
+            android:persistent="false"
+            android:selectable="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

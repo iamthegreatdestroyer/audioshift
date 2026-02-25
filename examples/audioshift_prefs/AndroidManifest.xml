@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+AudioShift Settings Preferences App
+Phase 6 § Sprint 6.2
+
+Purpose:
+  User-facing Android preferences app for real-time control of AudioShift effect.
+  Allows adjustment of pitch, latency, CPU parameters at runtime.
+
+Activities:
+  - AudioShiftPreferences: Main settings activity
+  - AboutActivity: About and help information
+
+Permissions:
+  - MODIFY_AUDIO_SETTINGS: Required to change audio effect parameters
+  - READ_PHONE_STATE: Optional for VoIP detection
+  - PACKAGE_USAGE_STATS: Optional for performance monitoring
+
+Features:
+  - Enable/disable toggle
+  - Pitch shift slider (±100 cents)
+  - WSOLA parameter tuning
+  - Live latency monitoring
+  - CPU usage gauge
+  - Frequency response info
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.audioshift.settings"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <!-- Target API Level: 31+ (Android 12+) for modern audio APIs -->
+    <uses-sdk
+        android:minSdkVersion="31"
+        android:targetSdkVersion="34" />
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+
+    <!-- Application Definition -->
+    <application
+        android:allowBackup="true"
+        android:debuggable="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AudioShiftSettings"
+        android:supportsRtl="true">
+
+        <!-- Main Settings Activity -->
+        <activity
+            android:name=".ui.AudioShiftPreferencesActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AudioShiftSettings">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- About Activity -->
+        <activity
+            android:name=".ui.AboutActivity"
+            android:exported="true"
+            android:label="@string/about_title"
+            android:theme="@style/Theme.AudioShiftSettings"
+            android:parentActivityName=".ui.AudioShiftPreferencesActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.AudioShiftPreferencesActivity" />
+        </activity>
+
+        <!-- Settings Preference Fragment (API 12+) -->
+        <activity
+            android:name=".ui.PreferencesFragment"
+            android:exported="false"
+            android:theme="@style/Theme.AudioShiftSettings" />
+
+        <!-- Background Service for Settings Monitoring -->
+        <service
+            android:name=".services.AudioShiftSettingsService"
+            android:exported="false"
+            android:foregroundServiceType="none">
+        </service>
+
+        <!-- Broadcast Receiver for System Audio Events -->
+        <receiver
+            android:name=".receivers.AudioShiftBroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.media.AUDIO_BECOMING_NOISY" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Content Provider for Settings (F-Droid compatibility) -->
+        <provider
+            android:name=".providers.AudioShiftSettingsProvider"
+            android:authorities="com.audioshift.settings.provider"
+            android:exported="true"
+            android:permission="android.permission.MODIFY_AUDIO_SETTINGS">
+            <grant-uri-permission android:pathPattern=".*" />
+        </provider>
+
+    </application>
+
+</manifest>

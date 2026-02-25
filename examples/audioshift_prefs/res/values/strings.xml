@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Information -->
+    <string name="app_name">AudioShift Settings</string>
+    <string name="app_version">1.0</string>
+    <string name="app_description">Real-time 432 Hz audio pitch shift control panel</string>
+
+    <!-- Main Activity -->
+    <string name="pref_category_general">General Settings</string>
+    <string name="pref_enabled_title">Enable AudioShift</string>
+    <string name="pref_enabled_summary">Toggle real-time 432 Hz pitch shift effect</string>
+    <string name="pref_enabled_on">AudioShift effect active</string>
+    <string name="pref_enabled_off">AudioShift effect disabled</string>
+
+    <!-- Pitch Adjustment -->
+    <string name="pref_category_pitch">Pitch Adjustment</string>
+    <string name="pref_pitch_title">Pitch Shift (cents)</string>
+    <string name="pref_pitch_summary">Adjust pitch shift from -100 to +100 cents</string>
+    <string name="pref_pitch_default">-31.77</string>
+    <string name="pref_pitch_unit">cents</string>
+    <string name="pref_pitch_440hz">440 Hz (default)</string>
+    <string name="pref_pitch_432hz">432 Hz (tuned)</string>
+
+    <!-- WSOLA Parameters -->
+    <string name="pref_category_wsola">Audio Processing (Advanced)</string>
+    <string name="pref_wsola_sequence_title">WSOLA Sequence Length</string>
+    <string name="pref_wsola_sequence_summary">Analysis window size (higher = more latency)</string>
+    <string name="pref_wsola_sequence_unit">ms</string>
+    <string name="pref_wsola_seekwindow_title">WSOLA Seek Window</string>
+    <string name="pref_wsola_seekwindow_summary">Search range for overlap point</string>
+    <string name="pref_wsola_seekwindow_unit">ms</string>
+    <string name="pref_wsola_overlap_title">WSOLA Overlap</string>
+    <string name="pref_wsola_overlap_summary">Crossfade region between frames</string>
+    <string name="pref_wsola_overlap_unit">ms</string>
+
+    <!-- Performance Monitoring -->
+    <string name="pref_category_performance">Performance Monitoring</string>
+    <string name="pref_latency_title">Measured Latency</string>
+    <string name="pref_latency_summary">End-to-end processing latency</string>
+    <string name="pref_latency_unit">ms</string>
+    <string name="pref_latency_reading">Latency: %1$.1f ms</string>
+    <string name="pref_cpu_title">CPU Usage</string>
+    <string name="pref_cpu_summary">Current CPU utilization by AudioShift</string>
+    <string name="pref_cpu_unit">%%</string>
+    <string name="pref_cpu_reading">CPU: %1$.1f %%</string>
+    <string name="pref_frequency_title">Output Frequency</string>
+    <string name="pref_frequency_summary">Detected output frequency</string>
+    <string name="pref_frequency_unit">Hz</string>
+    <string name="pref_frequency_reading">Output: %1$.1f Hz</string>
+
+    <!-- Audio Device -->
+    <string name="pref_category_device">Audio Device</string>
+    <string name="pref_device_title">Active Audio Device</string>
+    <string name="pref_device_summary">Currently active playback device</string>
+    <string name="pref_device_speaker">Speaker</string>
+    <string name="pref_device_headset">Wired Headset</string>
+    <string name="pref_device_bluetooth">Bluetooth</string>
+    <string name="pref_device_unknown">Unknown</string>
+
+    <!-- Troubleshooting -->
+    <string name="pref_category_help">Help &amp; Support</string>
+    <string name="pref_verify_title">Verify Installation</string>
+    <string name="pref_verify_summary">Check if AudioShift effect is properly installed</string>
+    <string name="pref_verify_button">Run Verification</string>
+    <string name="pref_help_title">Help &amp; FAQ</string>
+    <string name="pref_help_summary">Common questions and troubleshooting</string>
+    <string name="pref_about_title">About AudioShift</string>
+    <string name="pref_about_summary">Version, credits, and open source licenses</string>
+
+    <!-- Status Messages -->
+    <string name="status_enabled">✓ AudioShift is active</string>
+    <string name="status_disabled">✗ AudioShift is disabled</string>
+    <string name="status_not_installed">✗ AudioShift module not installed</string>
+    <string name="status_no_permission">✗ Permission denied (requires root or Magisk)</string>
+    <string name="status_loading">Loading settings…</string>
+    <string name="status_error">Error loading settings</string>
+
+    <!-- Verification Results -->
+    <string name="verify_checking">Verifying installation…</string>
+    <string name="verify_success">✓ AudioShift installed and active</string>
+    <string name="verify_failed">✗ AudioShift verification failed</string>
+    <string name="verify_effect_loaded">✓ Effect loaded in AudioFlinger</string>
+    <string name="verify_effect_not_found">✗ Effect not found in AudioFlinger</string>
+    <string name="verify_library_present">✓ Native library present</string>
+    <string name="verify_library_missing">✗ Native library missing</string>
+
+    <!-- About Screen -->
+    <string name="about_title">About AudioShift</string>
+    <string name="about_version">Version 1.0</string>
+    <string name="about_description">Real-time 432 Hz audio pitch shift for Android devices</string>
+    <string name="about_developer">Developer</string>
+    <string name="about_developer_name">AudioShift Project</string>
+    <string name="about_license">License</string>
+    <string name="about_license_type">MIT Open Source</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_github_url">github.com/iamthegreatdestroyer/audioshift</string>
+    <string name="about_thanks">Built with SoundTouch (WSOLA) and Android AudioFlinger</string>
+
+    <!-- Tooltips -->
+    <string name="tooltip_pitch">Adjust pitch shift in musical cents. Default: -31.77 cents for 432 Hz</string>
+    <string name="tooltip_latency">Latency added by AudioShift processing. Should be &lt;15ms</string>
+    <string name="tooltip_cpu">CPU load as percentage. &lt;10%% is ideal</string>
+    <string name="tooltip_wsola_sequence">Larger sequence = better quality but more latency. Range: 20-80ms</string>
+    <string name="tooltip_wsola_seekwindow">Search range for optimal overlap point. Larger = better quality</string>
+    <string name="tooltip_wsola_overlap">Crossfade length between frames. Typical: 8-20ms</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_title_warning">Warning</string>
+    <string name="dialog_title_error">Error</string>
+    <string name="dialog_title_info">Information</string>
+    <string name="dialog_confirm">Confirm</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_reset">Reset to Default</string>
+
+    <!-- Error Messages -->
+    <string name="error_no_module">AudioShift module not installed. Install via Magisk.</string>
+    <string name="error_no_permission">Permission denied. This app requires access to audio settings.</string>
+    <string name="error_not_rooted">Device must be rooted with Magisk installed.</string>
+    <string name="error_android_version">Requires Android 12+ (API 31+)</string>
+    <string name="error_arm64_required">Requires ARM64 architecture</string>
+
+</resources>

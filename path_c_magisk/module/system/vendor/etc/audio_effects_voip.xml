@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+AudioShift VoIP Audio Effects Configuration
+Phase 7 § Sprint 7.1
+
+Purpose:
+  Separate audio effects configuration for VoIP call routing.
+  Registers AudioShift effect for voice call device paths (EARPIECE, SPEAKER).
+
+Device Paths:
+  - AUDIO_DEVICE_OUT_EARPIECE: Primary voice call output (phone speaker)
+  - AUDIO_DEVICE_OUT_SPEAKER: Conference calls, loudspeaker
+  - AUDIO_DEVICE_OUT_BLUETOOTH_SCO: Bluetooth calls
+
+Integration:
+  This XML is merged with primary audio_effects.xml at runtime.
+  Allows independent tuning for music vs. VoIP paths.
+
+Performance Impact:
+  - Music path: Unchanged (uses standard 40ms WSOLA)
+  - VoIP path: Optimized (uses 20ms WSOLA for low latency)
+  - Automatic switching based on audio mode
+
+Testing:
+  - Verify effect loads on call initiation
+  - Monitor SNR for echo cancellation conflicts
+  - Measure latency <50ms end-to-end
+-->
+
+<audio_effects_conf version="2.0"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <!-- ────────────────────────────────────────────────────────────────────
+        VoIP Effects Configuration
+        ──────────────────────────────────────────────────────────────────── -->
+
+    <effects>
+        <!-- AudioShift 432Hz for VoIP Calls -->
+        <effect name="AudioShift432Hz_VoIP"
+            library="libaudioshift_hook"
+            uuid="f22a9ce0-7a11-11ee-b962-0242ac120002"
+            type="7b491460-8d4d-11e0-bd61-0002a5d5c51b">
+
+            <!-- Register for voice call device paths -->
+            <attach device="AUDIO_DEVICE_OUT_EARPIECE" />      <!-- Primary call output -->
+            <attach device="AUDIO_DEVICE_OUT_SPEAKER" />       <!-- Conference/speakerphone -->
+            <attach device="AUDIO_DEVICE_OUT_BLUETOOTH_SCO" /> <!-- Bluetooth calls -->
+
+            <!-- VoIP-specific parameters (low-latency tuning) -->
+            <param name="voip_mode" value="1" />                <!-- Enable VoIP optimization -->
+            <param name="sequence_length_ms" value="20" />      <!-- Shorter WSOLA window -->
+            <param name="seek_window_ms" value="8" />           <!-- Reduced search range -->
+            <param name="overlap_ms" value="4" />               <!-- Minimal crossfade -->
+            <param name="quality_level" value="7" />            <!-- Good quality for speech -->
+
+        </effect>
+    </effects>
+
+    <!-- ────────────────────────────────────────────────────────────────────
+        VoIP Routing Rules
+        ──────────────────────────────────────────────────────────────────── -->
+
+    <routes>
+        <!-- Route voice calls through AudioShift effect -->
+        <route type="mix"
+            sink="AUDIO_DEVICE_OUT_EARPIECE"
+            sources="AUDIO_DEVICE_IN_BUILTIN_MIC"
+            apply_effect="AudioShift432Hz_VoIP" />
+
+        <route type="mix"
+            sink="AUDIO_DEVICE_OUT_SPEAKER"
+            sources="AUDIO_DEVICE_IN_BUILTIN_MIC"
+            apply_effect="AudioShift432Hz_VoIP" />
+
+        <route type="mix"
+            sink="AUDIO_DEVICE_OUT_BLUETOOTH_SCO"
+            sources="AUDIO_DEVICE_IN_BUILTIN_MIC"
+            apply_effect="AudioShift432Hz_VoIP" />
+    </routes>
+
+</audio_effects_conf>

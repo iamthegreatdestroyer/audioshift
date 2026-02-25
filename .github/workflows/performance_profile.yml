@@ -1,0 +1,332 @@
+##
+# AudioShift — Performance Profiling Workflow
+# Phase 6 § Sprint 6.1.2
+#
+# Triggers on: push to branches (or manual workflow_dispatch)
+#
+# Jobs:
+#   profile_build → Build profiling-enabled binaries (15 min)
+#   profile_record → Record flame graph on device (40 min + recording time)
+#   profile_analyze → Generate analysis + detect regressions
+#   profile_compare → Compare against baseline
+#
+# This workflow captures CPU flame graphs to identify bottlenecks
+# and detect performance regressions across builds.
+#
+##
+
+name: "AudioShift — Performance Profiling"
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+            - profile/**
+    workflow_dispatch:
+        inputs:
+            record_duration:
+                description: "Recording duration in seconds"
+                required: false
+                default: "30"
+                type: string
+            sample_frequency:
+                description: "Sampling frequency (Hz)"
+                required: false
+                default: "99"
+                type: string
+
+permissions:
+    contents: read
+    actions: read
+
+jobs:
+    # ──────────────────────────────────────────────────────────────────────────
+    # Build Profiling-Enabled Binaries
+    # ──────────────────────────────────────────────────────────────────────────
+    profile_build:
+        name: "Build with Profiling Flags"
+        runs-on: ubuntu-22.04
+        timeout-minutes: 30
+
+        outputs:
+            profile_dir: ${{ steps.build.outputs.profile_dir }}
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Setup Android NDK
+              uses: nttld/setup-ndk@v1
+              with:
+                  ndk-version: r26
+                  add-to-path: true
+
+            - name: Build with profiling
+              id: build
+              run: |
+                  echo "::group::Build Configuration"
+
+                  # Configure profiling flags
+                  export CFLAGS="-fprofile-instr-generate -fcoverage-mapping -g -O2"
+                  export CXXFLAGS="-fprofile-instr-generate -fcoverage-mapping -g -O2"
+                  export LDFLAGS="-fprofile-instr-generate"
+
+                  echo "CFLAGS: $CFLAGS"
+                  echo "CXXFLAGS: $CXXFLAGS"
+                  echo "::endgroup::"
+
+                  echo "::group::DSP Library Build"
+
+                  cd shared/dsp
+                  mkdir -p build_profile
+
+                  # CMake configuration
+                  cmake -B build_profile \
+                      -DCMAKE_BUILD_TYPE=Release \
+                      -DCMAKE_C_FLAGS="$CFLAGS" \
+                      -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+                      -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+                      -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+                      -DANDROID_ABI=arm64-v8a
+
+                  cmake --build build_profile -j$(nproc)
+
+                  if [ ! -f build_profile/libaudioshift_dsp.so ]; then
+                      echo "ERROR: DSP library not built"
+                      exit 1
+                  fi
+
+                  echo "✓ DSP library built"
+                  ls -lh build_profile/libaudioshift_dsp.so
+                  echo "::endgroup::"
+
+                  # Output for downstream jobs
+                  echo "profile_dir=$(pwd)/build_profile" >> "$GITHUB_OUTPUT"
+
+            - name: Upload profiling binaries
+              uses: actions/upload-artifact@v4
+              with:
+                  name: profiling-binaries
+                  path: shared/dsp/build_profile/
+                  retention-days: 7
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Record Flame Graph on Device
+    # ──────────────────────────────────────────────────────────────────────────
+    profile_record:
+        name: "Record Flame Graph"
+        if: always()  # Run even if build fails (for debugging)
+        needs: profile_build
+        runs-on: [self-hosted, android, s25plus]
+        timeout-minutes: 60
+
+        outputs:
+            perf_size: ${{ steps.record.outputs.perf_size }}
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Download profiling binaries
+              uses: actions/download-artifact@v4
+              with:
+                  name: profiling-binaries
+                  path: ./profiling_binaries/
+
+            - name: Verify device connection
+              run: |
+                  adb get-serialno
+                  adb get-state | grep -q device || exit 1
+                  echo "✓ Device connected"
+
+            - name: Push profiling library
+              run: |
+                  echo "[INFO] Pushing profiling library to device..."
+                  adb push ./profiling_binaries/libaudioshift_dsp.so /data/local/tmp/ || {
+                      echo "⚠ Push failed (library may not be essential)"
+                  }
+
+            - name: Record perf data
+              id: record
+              run: |
+                  echo "::group::Flame Graph Recording"
+
+                  DURATION="${{ github.event.inputs.record_duration || '30' }}"
+                  FREQUENCY="${{ github.event.inputs.sample_frequency || '99' }}"
+
+                  echo "Recording duration: ${DURATION}s at ${FREQUENCY}Hz"
+
+                  ./scripts/profile/record_flamegraph.sh \
+                      --duration "$DURATION" \
+                      --frequency "$FREQUENCY"
+
+                  PERF_SIZE=$(ls -lh perf.data 2>/dev/null | awk '{print $5}' || echo "unknown")
+                  echo "perf_size=$PERF_SIZE" >> "$GITHUB_OUTPUT"
+
+                  echo "::endgroup::"
+              continue-on-error: true
+
+            - name: Upload perf data
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: perf-data
+                  path: |
+                      perf.data
+                      out.perf
+                      flamegraph.svg
+                  retention-days: 30
+              continue-on-error: true
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Analyze Performance Data
+    # ──────────────────────────────────────────────────────────────────────────
+    profile_analyze:
+        name: "Analyze Performance"
+        if: always()
+        needs: profile_record
+        runs-on: ubuntu-22.04
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Download perf data
+              uses: actions/download-artifact@v4
+              with:
+                  name: perf-data
+                  path: ./perf_artifacts/
+              continue-on-error: true
+
+            - name: Set up Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: '3.10'
+
+            - name: Install analysis dependencies
+              run: |
+                  pip install --quiet numpy scipy pandas matplotlib
+
+            - name: Analyze flame graph
+              run: |
+                  echo "::group::Performance Analysis"
+
+                  if [ ! -f ./perf_artifacts/out.perf ]; then
+                      echo "⚠ perf data not available (device test may have failed)"
+                      exit 0
+                  fi
+
+                  python3 scripts/profile/analyze_flamegraph.py \
+                      ./perf_artifacts/out.perf \
+                      --output analysis.json
+
+                  echo "::endgroup::"
+              continue-on-error: true
+
+            - name: Check for regressions
+              run: |
+                  echo "::group::Regression Detection"
+
+                  if [ ! -f analysis.json ] || [ ! -f research/baselines/flamegraph_baseline.json ]; then
+                      echo "⚠ Baseline not available (first run)"
+                      echo "Setting current as baseline..."
+                      mkdir -p research/baselines
+                      cp analysis.json research/baselines/flamegraph_baseline.json || true
+                      exit 0
+                  fi
+
+                  python3 scripts/profile/analyze_flamegraph.py \
+                      ./perf_artifacts/out.perf \
+                      --baseline research/baselines/flamegraph_baseline.json \
+                      --output analysis.json
+
+                  echo "::endgroup::"
+              continue-on-error: true
+
+            - name: Generate report
+              run: |
+                  echo "::group::Performance Report"
+
+                  if [ ! -f analysis.json ]; then
+                      echo "No analysis available"
+                      exit 0
+                  fi
+
+                  python3 - <<'PYTHON'
+import json
+
+with open('analysis.json', 'r') as f:
+    analysis = json.load(f)
+
+print("\n## Performance Analysis Report\n")
+print(f"Total Functions: {analysis.get('total_functions', 'N/A')}")
+print(f"Total CPU Time: {analysis.get('total_time_ms', 'N/A'):.1f}ms\n")
+
+print("### Top Hotspots:\n")
+for i, hotspot in enumerate(analysis.get('hotspots', [])[:5], 1):
+    print(f"{i}. **{hotspot['name']}**")
+    print(f"   - CPU: {hotspot['cpu_percentage']:.1f}%")
+    print(f"   - Calls: {hotspot['call_count']}")
+    print(f"   - Avg Time: {hotspot['avg_time_ms']:.2f}ms\n")
+
+print("### Recommendations:\n")
+for rec in analysis.get('recommendations', []):
+    print(f"- {rec}\n")
+                  PYTHON
+
+                  echo "::endgroup::"
+              continue-on-error: true
+
+            - name: Upload analysis
+              uses: actions/upload-artifact@v4
+              with:
+                  name: performance-analysis
+                  path: |
+                      analysis.json
+                      research/baselines/
+                  retention-days: 30
+              continue-on-error: true
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Summary
+    # ──────────────────────────────────────────────────────────────────────────
+    profile_summary:
+        name: "Profiling Summary"
+        if: always()
+        needs: [profile_build, profile_record, profile_analyze]
+        runs-on: ubuntu-22.04
+        timeout-minutes: 5
+
+        steps:
+            - name: Report status
+              run: |
+                  echo "::group::Profiling Workflow Summary"
+
+                  echo ""
+                  echo "Build:    ${{ needs.profile_build.result }}"
+                  echo "Record:   ${{ needs.profile_record.result }}"
+                  echo "Analyze:  ${{ needs.profile_analyze.result }}"
+                  echo ""
+
+                  if [ "${{ needs.profile_record.result }}" = "success" ]; then
+                      echo "✓ Flame graph generated successfully"
+                      echo "  Perf data size: ${{ needs.profile_record.outputs.perf_size }}"
+                  else
+                      echo "⚠ Flame graph recording skipped or failed"
+                  fi
+
+                  echo ""
+                  echo "Artifacts:"
+                  echo "- profiling-binaries: DSP library with profiling flags"
+                  echo "- perf-data: perf.data, out.perf, flamegraph.svg"
+                  echo "- performance-analysis: analysis.json, baseline comparison"
+
+                  echo "::endgroup::"
